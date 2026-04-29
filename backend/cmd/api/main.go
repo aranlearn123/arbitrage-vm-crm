@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"log"
-	"strings"
+	"net/http"
 	"time"
 
 	"arbitrage-vm-crm-backend/internal/config"
@@ -12,14 +12,13 @@ import (
 	"arbitrage-vm-crm-backend/internal/handler"
 	"arbitrage-vm-crm-backend/internal/repo"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	fiberlogger "github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 
 	_ "arbitrage-vm-crm-backend/docs"
 
-	swagger "github.com/swaggo/fiber-swagger"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // @title Arbitrage VM CRM API
@@ -41,16 +40,20 @@ func main() {
 		}
 	}()
 
-	app := fiber.New(fiber.Config{
-		AppName: "arbitrage-vm-crm-backend",
-	})
+	router := chi.NewRouter()
+	router.Use(middleware.RequestID)
+	router.Use(middleware.RealIP)
+	router.Use(middleware.Logger)
+	router.Use(middleware.Recoverer)
 
-	app.Use(recover.New())
-	app.Use(fiberlogger.New())
-	app.Use(cors.New(cors.Config{
-		AllowOrigins: strings.Join(cfg.CORSOrigins, ","),
-		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
-		AllowMethods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+	allowedOrigins := cfg.CORSOrigins
+	if len(allowedOrigins) == 0 {
+		allowedOrigins = []string{"*"}
+	}
+	router.Use(cors.Handler(cors.Options{
+		AllowedOrigins: allowedOrigins,
+		AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{"Origin", "Content-Type", "Accept", "Authorization"},
 	}))
 
 	healthHandler := handler.NewHealthHandler(db)
@@ -76,36 +79,37 @@ func main() {
 	})
 	equityHandler := handler.NewEquityHandler(equityService)
 
-	api := app.Group("/api/v1")
-	api.Get("/health", healthHandler.Check)
-	api.Get("/system/status", systemHandler.Status)
-	api.Get("/system/exchanges", systemHandler.Exchanges)
-	api.Get("/allocations", allocationHandler.List)
-	api.Get("/allocations/summary", allocationHandler.Summary)
-	api.Get("/allocations/active", allocationHandler.Active)
-	api.Get("/allocations/running", allocationHandler.Running)
-	api.Get("/allocations/cancelled/reasons", allocationHandler.CancelledReasons)
-	api.Get("/allocations/cancelled", allocationHandler.Cancelled)
-	api.Get("/allocations/:id/timeline", allocationHandler.Timeline)
-	api.Get("/allocations/:id", allocationHandler.Detail)
-	api.Get("/funding/latest", fundingHandler.Latest)
-	api.Get("/funding/history", fundingHandler.History)
-	api.Get("/funding/spread", fundingHandler.Spread)
-	api.Get("/funding/top-spreads", fundingHandler.TopSpreads)
-	api.Get("/market-quality/latest", marketQualityHandler.Latest)
-	api.Get("/market-quality/history", marketQualityHandler.History)
-	api.Get("/market-quality/alerts", marketQualityHandler.Alerts)
-	api.Get("/pnl/events", pnlHandler.Events)
-	api.Get("/pnl/summary", pnlHandler.Summary)
-	api.Get("/pnl/by-pair", pnlHandler.ByPair)
-	api.Get("/pnl/by-exchange", pnlHandler.ByExchange)
-	api.Get("/pnl/by-component", pnlHandler.ByComponent)
-	api.Get("/equity/latest", equityHandler.Latest)
-	api.Get("/equity/live", equityHandler.Latest)
+	api := chi.NewRouter()
+	api.Get("/health", handler.Wrap(healthHandler.Check))
+	api.Get("/system/status", handler.Wrap(systemHandler.Status))
+	api.Get("/system/exchanges", handler.Wrap(systemHandler.Exchanges))
+	api.Get("/allocations", handler.Wrap(allocationHandler.List))
+	api.Get("/allocations/summary", handler.Wrap(allocationHandler.Summary))
+	api.Get("/allocations/active", handler.Wrap(allocationHandler.Active))
+	api.Get("/allocations/running", handler.Wrap(allocationHandler.Running))
+	api.Get("/allocations/cancelled/reasons", handler.Wrap(allocationHandler.CancelledReasons))
+	api.Get("/allocations/cancelled", handler.Wrap(allocationHandler.Cancelled))
+	api.Get("/allocations/{id}/timeline", handler.Wrap(allocationHandler.Timeline))
+	api.Get("/allocations/{id}", handler.Wrap(allocationHandler.Detail))
+	api.Get("/funding/latest", handler.Wrap(fundingHandler.Latest))
+	api.Get("/funding/history", handler.Wrap(fundingHandler.History))
+	api.Get("/funding/spread", handler.Wrap(fundingHandler.Spread))
+	api.Get("/funding/top-spreads", handler.Wrap(fundingHandler.TopSpreads))
+	api.Get("/market-quality/latest", handler.Wrap(marketQualityHandler.Latest))
+	api.Get("/market-quality/history", handler.Wrap(marketQualityHandler.History))
+	api.Get("/market-quality/alerts", handler.Wrap(marketQualityHandler.Alerts))
+	api.Get("/pnl/events", handler.Wrap(pnlHandler.Events))
+	api.Get("/pnl/summary", handler.Wrap(pnlHandler.Summary))
+	api.Get("/pnl/by-pair", handler.Wrap(pnlHandler.ByPair))
+	api.Get("/pnl/by-exchange", handler.Wrap(pnlHandler.ByExchange))
+	api.Get("/pnl/by-component", handler.Wrap(pnlHandler.ByComponent))
+	api.Get("/equity/latest", handler.Wrap(equityHandler.Latest))
+	api.Get("/equity/live", handler.Wrap(equityHandler.Latest))
 
+	router.Mount("/api/v1", api)
+	router.Get("/swagger/*", httpSwagger.WrapHandler)
 	log.Printf("starting api server on :%s", cfg.AppPort)
-	app.Get("/swagger/*", swagger.WrapHandler)
-	if err := app.Listen(":" + cfg.AppPort); err != nil {
+	if err := http.ListenAndServe(":"+cfg.AppPort, router); err != nil {
 		log.Fatal(err)
 	}
 }

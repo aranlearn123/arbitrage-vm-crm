@@ -1,13 +1,13 @@
 # Arbitrage VM CRM Backend
 
-Go Fiber backend API สำหรับ CRM monitoring ระบบ arbitrage trading
+Go chi backend API สำหรับ CRM monitoring ระบบ arbitrage trading
 
 เป้าหมายแรกของ service นี้คือเป็น read-only API สำหรับอ่านข้อมูลจาก database ของ `d:\platform` เพื่อใช้ทำ dashboard, allocation monitoring, historical data, trade log, PnL และ equity curve
 
 ## Tech Stack
 
 - Go
-- Fiber
+- chi
 - PostgreSQL / TimescaleDB
 - Bun ORM
 - Swagger ผ่าน `swaggo`
@@ -96,7 +96,7 @@ go install github.com/swaggo/swag/cmd/swag@latest
 ติดตั้ง dependency:
 
 ```powershell
-go get github.com/swaggo/fiber-swagger
+go get github.com/swaggo/http-swagger
 go get github.com/swaggo/swag
 ```
 
@@ -134,7 +134,7 @@ Response:
 ### Phase 1: Health Baseline
 
 - config loader
-- Fiber server
+- chi server
 - middleware: recover, logger, cors
 - health endpoint
 - Swagger setup

@@ -5,11 +5,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/gofiber/fiber/v2"
 )
 
-func queryTime(c *fiber.Ctx, name string) (time.Time, error) {
+func queryTime(c *Context, name string) (time.Time, error) {
 	value := strings.TrimSpace(c.Query(name))
 	if value == "" {
 		return time.Time{}, nil
@@ -31,7 +29,7 @@ func queryTime(c *fiber.Ctx, name string) (time.Time, error) {
 	return time.Time{}, fmt.Errorf("invalid %s time format", name)
 }
 
-func queryFloat(c *fiber.Ctx, name string, defaultValue float64) (float64, error) {
+func queryFloat(c *Context, name string, defaultValue float64) (float64, error) {
 	value := strings.TrimSpace(c.Query(name))
 	if value == "" {
 		return defaultValue, nil
@@ -44,7 +42,7 @@ func queryFloat(c *fiber.Ctx, name string, defaultValue float64) (float64, error
 	return parsed, nil
 }
 
-func queryInt(c *fiber.Ctx, name string, defaultValue int) (int, error) {
+func queryInt(c *Context, name string, defaultValue int) (int, error) {
 	value := strings.TrimSpace(c.Query(name))
 	if value == "" {
 		return defaultValue, nil

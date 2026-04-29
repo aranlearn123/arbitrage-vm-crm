@@ -1,12 +1,11 @@
 package handler
 
 import (
+	"net/http"
 	"strings"
 
 	"arbitrage-vm-crm-backend/internal/exchange"
 	"arbitrage-vm-crm-backend/internal/response"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 type EquityHandler struct {
@@ -30,7 +29,7 @@ func NewEquityHandler(service *exchange.EquityService) *EquityHandler {
 // @Failure 502 {object} response.EquityLatest
 // @Router /equity/latest [get]
 // @Router /equity/live [get]
-func (h *EquityHandler) Latest(c *fiber.Ctx) error {
+func (h *EquityHandler) Latest(c *Context) error {
 	refresh := strings.EqualFold(strings.TrimSpace(c.Query("refresh")), "true")
 	result, err := h.service.Fetch(c.UserContext(),
 		queryCSV(c.Query("exchange"), strings.ToLower),
@@ -38,12 +37,12 @@ func (h *EquityHandler) Latest(c *fiber.Ctx) error {
 		refresh,
 	)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusBadRequest).JSON(response.Error{Error: err.Error()})
 	}
 
-	status := fiber.StatusOK
+	status := http.StatusOK
 	if len(result.Snapshots) == 0 && len(result.Errors) > 0 {
-		status = fiber.StatusBadGateway
+		status = http.StatusBadGateway
 	}
 
 	return c.Status(status).JSON(response.EquityLatest{

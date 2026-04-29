@@ -3,14 +3,13 @@ package handler
 import (
 	"context"
 	"database/sql"
+	"net/http"
 	"strings"
 	"time"
 
 	"arbitrage-vm-crm-backend/internal/config"
 	"arbitrage-vm-crm-backend/internal/repo"
 	"arbitrage-vm-crm-backend/internal/response"
-
-	"github.com/gofiber/fiber/v2"
 	"github.com/uptrace/bun"
 )
 
@@ -65,7 +64,7 @@ func NewSystemHandler(db *bun.DB, repo *repo.SystemRepo, cfg config.Config) *Sys
 // @Success 200 {object} response.SystemStatus
 // @Failure 503 {object} response.SystemStatus
 // @Router /system/status [get]
-func (h *SystemHandler) Status(c *fiber.Ctx) error {
+func (h *SystemHandler) Status(c *Context) error {
 	now := time.Now().UTC()
 	payload := response.SystemStatus{
 		Status:     "ok",
@@ -82,20 +81,20 @@ func (h *SystemHandler) Status(c *fiber.Ctx) error {
 	if err := h.pingDatabase(c.UserContext()); err != nil {
 		payload.Status = "unhealthy"
 		payload.Database = response.HealthComponent{Status: "unhealthy", Error: err.Error()}
-		return c.Status(fiber.StatusServiceUnavailable).JSON(payload)
+		return c.Status(http.StatusServiceUnavailable).JSON(payload)
 	}
 
 	overview, err := h.repo.Overview(c.UserContext())
 	if err != nil {
 		payload.Status = "unhealthy"
 		payload.Database = response.HealthComponent{Status: "unhealthy", Error: err.Error()}
-		return c.Status(fiber.StatusServiceUnavailable).JSON(payload)
+		return c.Status(http.StatusServiceUnavailable).JSON(payload)
 	}
 	exchanges, err := h.exchangeStatuses(c.UserContext(), now)
 	if err != nil {
 		payload.Status = "unhealthy"
 		payload.Database = response.HealthComponent{Status: "unhealthy", Error: err.Error()}
-		return c.Status(fiber.StatusServiceUnavailable).JSON(payload)
+		return c.Status(http.StatusServiceUnavailable).JSON(payload)
 	}
 
 	if !overview.TimescaleEnabled {
@@ -133,14 +132,14 @@ func (h *SystemHandler) Status(c *fiber.Ctx) error {
 // @Success 200 {object} response.SystemExchangeList
 // @Failure 503 {object} response.Error
 // @Router /system/exchanges [get]
-func (h *SystemHandler) Exchanges(c *fiber.Ctx) error {
+func (h *SystemHandler) Exchanges(c *Context) error {
 	if err := h.pingDatabase(c.UserContext()); err != nil {
-		return c.Status(fiber.StatusServiceUnavailable).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusServiceUnavailable).JSON(response.Error{Error: err.Error()})
 	}
 
 	rows, err := h.exchangeStatuses(c.UserContext(), time.Now().UTC())
 	if err != nil {
-		return c.Status(fiber.StatusServiceUnavailable).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusServiceUnavailable).JSON(response.Error{Error: err.Error()})
 	}
 
 	return c.JSON(response.SystemExchangeList{

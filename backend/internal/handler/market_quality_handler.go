@@ -1,13 +1,12 @@
 package handler
 
 import (
+	"net/http"
 	"strconv"
 	"strings"
 
 	"arbitrage-vm-crm-backend/internal/repo"
 	"arbitrage-vm-crm-backend/internal/response"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 type MarketQualityHandler struct {
@@ -30,11 +29,11 @@ func NewMarketQualityHandler(repo *repo.MarketQualityRepo) *MarketQualityHandler
 // @Success 200 {object} response.MarketQualityList
 // @Failure 500 {object} response.Error
 // @Router /market-quality/latest [get]
-func (h *MarketQualityHandler) Latest(c *fiber.Ctx) error {
+func (h *MarketQualityHandler) Latest(c *Context) error {
 	filter := marketDataFilter(c)
 	rows, err := h.repo.Latest(c.UserContext(), filter)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 
 	return c.JSON(response.MarketQualityList{
@@ -59,15 +58,15 @@ func (h *MarketQualityHandler) Latest(c *fiber.Ctx) error {
 // @Failure 400 {object} response.Error
 // @Failure 500 {object} response.Error
 // @Router /market-quality/history [get]
-func (h *MarketQualityHandler) History(c *fiber.Ctx) error {
+func (h *MarketQualityHandler) History(c *Context) error {
 	filter, err := marketDataHistoryFilter(c)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusBadRequest).JSON(response.Error{Error: err.Error()})
 	}
 
 	rows, err := h.repo.History(c.UserContext(), filter)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 
 	return c.JSON(response.MarketQualityList{
@@ -94,15 +93,15 @@ func (h *MarketQualityHandler) History(c *fiber.Ctx) error {
 // @Failure 400 {object} response.Error
 // @Failure 500 {object} response.Error
 // @Router /market-quality/alerts [get]
-func (h *MarketQualityHandler) Alerts(c *fiber.Ctx) error {
+func (h *MarketQualityHandler) Alerts(c *Context) error {
 	filter, err := marketQualityAlertFilter(c)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusBadRequest).JSON(response.Error{Error: err.Error()})
 	}
 
 	rows, err := h.repo.Alerts(c.UserContext(), filter)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 
 	return c.JSON(response.MarketQualityAlertList{
@@ -112,7 +111,7 @@ func (h *MarketQualityHandler) Alerts(c *fiber.Ctx) error {
 	})
 }
 
-func marketQualityAlertFilter(c *fiber.Ctx) (repo.MarketQualityAlertFilter, error) {
+func marketQualityAlertFilter(c *Context) (repo.MarketQualityAlertFilter, error) {
 	minSamples, err := queryInt(c, "min_samples", 10)
 	if err != nil {
 		return repo.MarketQualityAlertFilter{}, err

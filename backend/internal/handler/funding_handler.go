@@ -1,12 +1,11 @@
 package handler
 
 import (
+	"net/http"
 	"strings"
 
 	"arbitrage-vm-crm-backend/internal/repo"
 	"arbitrage-vm-crm-backend/internal/response"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 type FundingHandler struct {
@@ -30,10 +29,10 @@ func NewFundingHandler(repo *repo.FundingRepo) *FundingHandler {
 // @Failure 400 {object} response.Error
 // @Failure 500 {object} response.Error
 // @Router /funding/latest [get]
-func (h *FundingHandler) Latest(c *fiber.Ctx) error {
+func (h *FundingHandler) Latest(c *Context) error {
 	rows, err := h.repo.Latest(c.UserContext(), marketDataFilter(c))
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 
 	limit := queryLimit(c)
@@ -59,15 +58,15 @@ func (h *FundingHandler) Latest(c *fiber.Ctx) error {
 // @Failure 400 {object} response.Error
 // @Failure 500 {object} response.Error
 // @Router /funding/history [get]
-func (h *FundingHandler) History(c *fiber.Ctx) error {
+func (h *FundingHandler) History(c *Context) error {
 	filter, err := marketDataHistoryFilter(c)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusBadRequest).JSON(response.Error{Error: err.Error()})
 	}
 
 	rows, err := h.repo.History(c.UserContext(), filter)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 
 	return c.JSON(response.FundingRateList{
@@ -89,19 +88,19 @@ func (h *FundingHandler) History(c *fiber.Ctx) error {
 // @Failure 404 {object} response.Error
 // @Failure 500 {object} response.Error
 // @Router /funding/spread [get]
-func (h *FundingHandler) Spread(c *fiber.Ctx) error {
+func (h *FundingHandler) Spread(c *Context) error {
 	base := strings.ToUpper(strings.TrimSpace(c.Query("base")))
 	if base == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error{Error: "base is required"})
+		return c.Status(http.StatusBadRequest).JSON(response.Error{Error: "base is required"})
 	}
 	quote := strings.ToUpper(strings.TrimSpace(c.Query("quote", "USDT")))
 
 	row, err := h.repo.Spread(c.UserContext(), base, quote)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 	if row == nil {
-		return c.Status(fiber.StatusNotFound).JSON(response.Error{Error: "funding spread not found"})
+		return c.Status(http.StatusNotFound).JSON(response.Error{Error: "funding spread not found"})
 	}
 
 	return c.JSON(response.FundingSpreadDetail{
@@ -122,10 +121,10 @@ func (h *FundingHandler) Spread(c *fiber.Ctx) error {
 // @Failure 400 {object} response.Error
 // @Failure 500 {object} response.Error
 // @Router /funding/top-spreads [get]
-func (h *FundingHandler) TopSpreads(c *fiber.Ctx) error {
+func (h *FundingHandler) TopSpreads(c *Context) error {
 	minAbsSpreadBps, err := queryFloat(c, "min_abs_spread_bps", 0)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusBadRequest).JSON(response.Error{Error: err.Error()})
 	}
 
 	limit := queryLimit(c)
@@ -136,7 +135,7 @@ func (h *FundingHandler) TopSpreads(c *fiber.Ctx) error {
 		Limit:           limit,
 	})
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 
 	return c.JSON(response.FundingSpreadList{
@@ -146,7 +145,7 @@ func (h *FundingHandler) TopSpreads(c *fiber.Ctx) error {
 	})
 }
 
-func marketDataFilter(c *fiber.Ctx) repo.TimeSeriesFilter {
+func marketDataFilter(c *Context) repo.TimeSeriesFilter {
 	return repo.TimeSeriesFilter{
 		Exchanges: queryCSV(c.Query("exchange"), strings.ToLower),
 		Bases:     queryCSV(c.Query("base"), strings.ToUpper),
@@ -155,7 +154,7 @@ func marketDataFilter(c *fiber.Ctx) repo.TimeSeriesFilter {
 	}
 }
 
-func marketDataHistoryFilter(c *fiber.Ctx) (repo.TimeSeriesFilter, error) {
+func marketDataHistoryFilter(c *Context) (repo.TimeSeriesFilter, error) {
 	from, err := queryTime(c, "from")
 	if err != nil {
 		return repo.TimeSeriesFilter{}, err

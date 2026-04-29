@@ -1,14 +1,13 @@
 package handler
 
 import (
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"arbitrage-vm-crm-backend/internal/repo"
 	"arbitrage-vm-crm-backend/internal/response"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 const defaultHandlerLimit = 100
@@ -34,7 +33,7 @@ func NewAllocationHandler(repo *repo.AllocationRepo) *AllocationHandler {
 // @Success 200 {object} response.AllocationList
 // @Failure 500 {object} response.Error
 // @Router /allocations [get]
-func (h *AllocationHandler) List(c *fiber.Ctx) error {
+func (h *AllocationHandler) List(c *Context) error {
 	limit := queryLimit(c)
 	rows, err := h.repo.List(c.UserContext(), repo.AllocationListFilter{
 		Statuses: queryCSV(c.Query("status"), strings.ToLower),
@@ -44,7 +43,7 @@ func (h *AllocationHandler) List(c *fiber.Ctx) error {
 		Limit:    limit,
 	})
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 	return c.JSON(response.AllocationList{
 		Data:  mapAllocations(rows),
@@ -61,15 +60,15 @@ func (h *AllocationHandler) List(c *fiber.Ctx) error {
 // @Success 200 {object} response.AllocationSummary
 // @Failure 500 {object} response.Error
 // @Router /allocations/summary [get]
-func (h *AllocationHandler) Summary(c *fiber.Ctx) error {
+func (h *AllocationHandler) Summary(c *Context) error {
 	summary, err := h.repo.Summary(c.UserContext())
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 
 	reasons, err := h.repo.CancelledReasons(c.UserContext(), 10)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 
 	return c.JSON(response.AllocationSummary{
@@ -91,11 +90,11 @@ func (h *AllocationHandler) Summary(c *fiber.Ctx) error {
 // @Success 200 {object} response.AllocationList
 // @Failure 500 {object} response.Error
 // @Router /allocations/active [get]
-func (h *AllocationHandler) Active(c *fiber.Ctx) error {
+func (h *AllocationHandler) Active(c *Context) error {
 	limit := queryLimit(c)
 	rows, err := h.repo.Active(c.UserContext(), limit)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 	return c.JSON(response.AllocationList{
 		Data:  mapAllocations(rows),
@@ -113,11 +112,11 @@ func (h *AllocationHandler) Active(c *fiber.Ctx) error {
 // @Success 200 {object} response.AllocationList
 // @Failure 500 {object} response.Error
 // @Router /allocations/running [get]
-func (h *AllocationHandler) Running(c *fiber.Ctx) error {
+func (h *AllocationHandler) Running(c *Context) error {
 	limit := queryLimit(c)
 	rows, err := h.repo.Running(c.UserContext(), limit)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 	return c.JSON(response.AllocationList{
 		Data:  mapAllocations(rows),
@@ -139,7 +138,7 @@ func (h *AllocationHandler) Running(c *fiber.Ctx) error {
 // @Success 200 {object} response.AllocationList
 // @Failure 500 {object} response.Error
 // @Router /allocations/cancelled [get]
-func (h *AllocationHandler) Cancelled(c *fiber.Ctx) error {
+func (h *AllocationHandler) Cancelled(c *Context) error {
 	limit := queryLimit(c)
 	rows, err := h.repo.Cancelled(c.UserContext(), repo.AllocationListFilter{
 		Bases:   queryCSV(c.Query("base"), strings.ToUpper),
@@ -149,7 +148,7 @@ func (h *AllocationHandler) Cancelled(c *fiber.Ctx) error {
 		Limit:   limit,
 	})
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 	return c.JSON(response.AllocationList{
 		Data:  mapAllocations(rows),
@@ -167,11 +166,11 @@ func (h *AllocationHandler) Cancelled(c *fiber.Ctx) error {
 // @Success 200 {object} response.CancelledReasonList
 // @Failure 500 {object} response.Error
 // @Router /allocations/cancelled/reasons [get]
-func (h *AllocationHandler) CancelledReasons(c *fiber.Ctx) error {
+func (h *AllocationHandler) CancelledReasons(c *Context) error {
 	limit := queryLimit(c)
 	rows, err := h.repo.CancelledReasons(c.UserContext(), limit)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 	return c.JSON(response.CancelledReasonList{
 		Data:  mapCancelledReasons(rows),
@@ -191,18 +190,18 @@ func (h *AllocationHandler) CancelledReasons(c *fiber.Ctx) error {
 // @Failure 404 {object} response.Error
 // @Failure 500 {object} response.Error
 // @Router /allocations/{id} [get]
-func (h *AllocationHandler) Detail(c *fiber.Ctx) error {
+func (h *AllocationHandler) Detail(c *Context) error {
 	id, ok := pathID(c)
 	if !ok {
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error{Error: "invalid allocation id"})
+		return c.Status(http.StatusBadRequest).JSON(response.Error{Error: "invalid allocation id"})
 	}
 
 	row, err := h.repo.GetByID(c.UserContext(), id)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 	if row == nil {
-		return c.Status(fiber.StatusNotFound).JSON(response.Error{Error: "allocation not found"})
+		return c.Status(http.StatusNotFound).JSON(response.Error{Error: "allocation not found"})
 	}
 
 	return c.JSON(response.AllocationDetail{
@@ -221,23 +220,23 @@ func (h *AllocationHandler) Detail(c *fiber.Ctx) error {
 // @Failure 404 {object} response.Error
 // @Failure 500 {object} response.Error
 // @Router /allocations/{id}/timeline [get]
-func (h *AllocationHandler) Timeline(c *fiber.Ctx) error {
+func (h *AllocationHandler) Timeline(c *Context) error {
 	id, ok := pathID(c)
 	if !ok {
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error{Error: "invalid allocation id"})
+		return c.Status(http.StatusBadRequest).JSON(response.Error{Error: "invalid allocation id"})
 	}
 
 	row, err := h.repo.GetByID(c.UserContext(), id)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 	if row == nil {
-		return c.Status(fiber.StatusNotFound).JSON(response.Error{Error: "allocation not found"})
+		return c.Status(http.StatusNotFound).JSON(response.Error{Error: "allocation not found"})
 	}
 
 	events, err := h.repo.Timeline(c.UserContext(), id)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 
 	return c.JSON(response.AllocationTimeline{
@@ -247,7 +246,7 @@ func (h *AllocationHandler) Timeline(c *fiber.Ctx) error {
 	})
 }
 
-func queryLimit(c *fiber.Ctx) int {
+func queryLimit(c *Context) int {
 	limit, err := strconv.Atoi(c.Query("limit"))
 	if err != nil {
 		return defaultHandlerLimit
@@ -261,7 +260,7 @@ func queryLimit(c *fiber.Ctx) int {
 	return limit
 }
 
-func pathID(c *fiber.Ctx) (int64, bool) {
+func pathID(c *Context) (int64, bool) {
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil || id <= 0 {
 		return 0, false

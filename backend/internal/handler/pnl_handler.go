@@ -2,12 +2,11 @@ package handler
 
 import (
 	"context"
+	"net/http"
 	"strings"
 
 	"arbitrage-vm-crm-backend/internal/repo"
 	"arbitrage-vm-crm-backend/internal/response"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 type PnLHandler struct {
@@ -36,15 +35,15 @@ func NewPnLHandler(repo *repo.PnLRepo) *PnLHandler {
 // @Failure 400 {object} response.Error
 // @Failure 500 {object} response.Error
 // @Router /pnl/events [get]
-func (h *PnLHandler) Events(c *fiber.Ctx) error {
+func (h *PnLHandler) Events(c *Context) error {
 	filter, err := pnlFilter(c)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusBadRequest).JSON(response.Error{Error: err.Error()})
 	}
 
 	rows, err := h.repo.Events(c.UserContext(), filter)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 
 	return c.JSON(response.PnLEventList{
@@ -72,27 +71,27 @@ func (h *PnLHandler) Events(c *fiber.Ctx) error {
 // @Failure 400 {object} response.Error
 // @Failure 500 {object} response.Error
 // @Router /pnl/summary [get]
-func (h *PnLHandler) Summary(c *fiber.Ctx) error {
+func (h *PnLHandler) Summary(c *Context) error {
 	filter, err := pnlFilter(c)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusBadRequest).JSON(response.Error{Error: err.Error()})
 	}
 
 	summary, err := h.repo.Summary(c.UserContext(), filter)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 	byComponent, err := h.repo.ByComponent(c.UserContext(), filter)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 	byExchange, err := h.repo.ByExchange(c.UserContext(), filter)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 	byPair, err := h.repo.ByPair(c.UserContext(), filter)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 
 	return c.JSON(response.PnLSummary{
@@ -125,7 +124,7 @@ func (h *PnLHandler) Summary(c *fiber.Ctx) error {
 // @Failure 400 {object} response.Error
 // @Failure 500 {object} response.Error
 // @Router /pnl/by-pair [get]
-func (h *PnLHandler) ByPair(c *fiber.Ctx) error {
+func (h *PnLHandler) ByPair(c *Context) error {
 	return h.group(c, h.repo.ByPair)
 }
 
@@ -147,7 +146,7 @@ func (h *PnLHandler) ByPair(c *fiber.Ctx) error {
 // @Failure 400 {object} response.Error
 // @Failure 500 {object} response.Error
 // @Router /pnl/by-exchange [get]
-func (h *PnLHandler) ByExchange(c *fiber.Ctx) error {
+func (h *PnLHandler) ByExchange(c *Context) error {
 	return h.group(c, h.repo.ByExchange)
 }
 
@@ -169,19 +168,19 @@ func (h *PnLHandler) ByExchange(c *fiber.Ctx) error {
 // @Failure 400 {object} response.Error
 // @Failure 500 {object} response.Error
 // @Router /pnl/by-component [get]
-func (h *PnLHandler) ByComponent(c *fiber.Ctx) error {
+func (h *PnLHandler) ByComponent(c *Context) error {
 	return h.group(c, h.repo.ByComponent)
 }
 
-func (h *PnLHandler) group(c *fiber.Ctx, load func(context.Context, repo.PnLFilter) ([]repo.PnLGroup, error)) error {
+func (h *PnLHandler) group(c *Context, load func(context.Context, repo.PnLFilter) ([]repo.PnLGroup, error)) error {
 	filter, err := pnlFilter(c)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusBadRequest).JSON(response.Error{Error: err.Error()})
 	}
 
 	rows, err := load(c.UserContext(), filter)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
+		return c.Status(http.StatusInternalServerError).JSON(response.Error{Error: err.Error()})
 	}
 
 	return c.JSON(response.PnLGroupList{
@@ -191,7 +190,7 @@ func (h *PnLHandler) group(c *fiber.Ctx, load func(context.Context, repo.PnLFilt
 	})
 }
 
-func pnlFilter(c *fiber.Ctx) (repo.PnLFilter, error) {
+func pnlFilter(c *Context) (repo.PnLFilter, error) {
 	from, err := queryTime(c, "from")
 	if err != nil {
 		return repo.PnLFilter{}, err
