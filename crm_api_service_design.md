@@ -10,11 +10,122 @@
 - ดู trade log, order/execution/position, PnL และ equity curve รวม 2 exchange
 - รองรับ dashboard และหน้า drill-down ราย allocation / pair / exchange
 
+## Implementation Checklist
+
+สถานะนี้อิงจากโค้ด backend ปัจจุบันใน `backend/cmd/api/main.go`
+
+### Foundation
+
+- [x] Go Fiber API scaffold
+- [x] `.env` config loader
+- [x] PostgreSQL/Bun connection
+- [x] Swagger docs route
+- [x] Health check with database ping
+- [ ] Graceful shutdown
+- [ ] Standard pagination response with cursor
+- [ ] Central error response/middleware
+
+### System / Health API
+
+- [x] `GET /api/v1/health`
+- [ ] `GET /api/v1/system/status`
+- [ ] `GET /api/v1/system/exchanges`
+
+### Dashboard Summary API
+
+- [ ] `GET /api/v1/dashboard/summary`
+- [ ] `GET /api/v1/dashboard/live-state`
+- [ ] `GET /api/v1/dashboard/risk`
+
+### Allocation API
+
+- [x] `GET /api/v1/allocations`
+- [x] `GET /api/v1/allocations/summary`
+- [x] `GET /api/v1/allocations/active`
+- [x] `GET /api/v1/allocations/running`
+- [x] `GET /api/v1/allocations/cancelled`
+- [x] `GET /api/v1/allocations/cancelled/reasons`
+- [x] `GET /api/v1/allocations/{id}`
+- [x] `GET /api/v1/allocations/{id}/timeline`
+
+### Allocation Event API
+
+- [ ] Create table `allocation_events`
+- [ ] `GET /api/v1/allocation-events`
+- [ ] `GET /api/v1/allocation-events/summary`
+
+### Instrument / Pair API
+
+- [ ] `GET /api/v1/instruments`
+- [ ] `GET /api/v1/pairs`
+- [ ] `GET /api/v1/pairs/{base}-{quote}/latest`
+
+### Funding API
+
+- [ ] `GET /api/v1/funding/latest`
+- [ ] `GET /api/v1/funding/history`
+- [ ] `GET /api/v1/funding/spread`
+- [ ] `GET /api/v1/funding/top-spreads`
+
+### Open Interest API
+
+- [ ] `GET /api/v1/open-interest/latest`
+- [ ] `GET /api/v1/open-interest/history`
+- [ ] `GET /api/v1/open-interest/skew`
+
+### Market Quality API
+
+- [ ] `GET /api/v1/market-quality/latest`
+- [ ] `GET /api/v1/market-quality/history`
+- [ ] `GET /api/v1/market-quality/alerts`
+
+### Order Routing / Execution Flow API
+
+- [ ] `GET /api/v1/order-routing/{plan_id}`
+- [ ] `GET /api/v1/order-routing/{plan_id}/progress`
+- [ ] `GET /api/v1/orders`
+
+### Trade Log / Account Event API
+
+- [ ] Create table `account_events`
+- [ ] `GET /api/v1/account-events`
+- [ ] `GET /api/v1/trades`
+- [ ] `GET /api/v1/positions`
+
+### PnL API
+
+- [ ] `GET /api/v1/pnl/events`
+- [ ] `GET /api/v1/pnl/summary`
+- [ ] `GET /api/v1/pnl/by-pair`
+- [ ] `GET /api/v1/pnl/by-exchange`
+- [ ] `GET /api/v1/pnl/by-component`
+
+### Equity Curve API
+
+- [ ] Create table `wallet_snapshots`
+- [ ] `GET /api/v1/equity/latest`
+- [ ] `GET /api/v1/equity/curve`
+- [ ] `GET /api/v1/equity/curve/combined`
+- [ ] `GET /api/v1/equity/drawdown`
+
+### Alert / Incident API
+
+- [ ] Create table `alerts`
+- [ ] `GET /api/v1/alerts`
+- [ ] `GET /api/v1/alerts/active`
+- [ ] `POST /api/v1/alerts/{id}/ack`
+- [ ] `POST /api/v1/alerts/{id}/resolve`
+
+### Realtime API
+
+- [ ] `GET /api/v1/sse/events`
+- [ ] `GET /api/v1/ws`
+
 ## 1. System / Health API
 
 ใช้สำหรับดูว่า API, database, exchange connector และ trading engine ยังทำงานปกติหรือไม่
 
-### `GET /api/v1/health`
+### [x] `GET /api/v1/health`
 
 ตรวจว่า API service ยัง alive
 
@@ -27,7 +138,7 @@ Response example:
 }
 ```
 
-### `GET /api/v1/system/status`
+### [ ] `GET /api/v1/system/status`
 
 ดูสถานะรวมของ service สำคัญ
 
@@ -46,7 +157,7 @@ Data source:
 - ตาราง `open_interest`
 - ตาราง `market_quality_metrics_1m`
 
-### `GET /api/v1/system/exchanges`
+### [ ] `GET /api/v1/system/exchanges`
 
 ดู exchange ที่ระบบรองรับและสถานะล่าสุด
 
@@ -65,7 +176,7 @@ Response fields:
 
 ใช้ทำหน้าแรกของ CRM
 
-### `GET /api/v1/dashboard/summary`
+### [ ] `GET /api/v1/dashboard/summary`
 
 สรุปภาพรวมระบบเทรด
 
@@ -89,7 +200,7 @@ Data source:
 - future table: `wallet_snapshots`
 - future table: `alerts`
 
-### `GET /api/v1/dashboard/live-state`
+### [ ] `GET /api/v1/dashboard/live-state`
 
 สถานะ live แบบสั้นสำหรับ auto-refresh
 
@@ -102,7 +213,7 @@ Data source:
 - latest equity
 - stale data flags
 
-### `GET /api/v1/dashboard/risk`
+### [ ] `GET /api/v1/dashboard/risk`
 
 ดู risk รวมของระบบ
 
@@ -146,7 +257,7 @@ Data source:
 - code: `internal/types/allocation.go`
 - repo: `internal/repo/allocation.go`
 
-### `GET /api/v1/allocations/summary`
+### [x] `GET /api/v1/allocations/summary`
 
 สรุปจำนวน allocation ตาม state
 
@@ -193,7 +304,7 @@ GROUP BY status
 ORDER BY status;
 ```
 
-### `GET /api/v1/allocations`
+### [x] `GET /api/v1/allocations`
 
 List allocation แบบ filter ได้
 
@@ -225,7 +336,7 @@ Response fields:
 - `created_at`
 - `updated_at`
 
-### `GET /api/v1/allocations/active`
+### [x] `GET /api/v1/allocations/active`
 
 ดู allocation ที่ถือว่ายัง active ในระบบ
 
@@ -249,7 +360,7 @@ WHERE status IN ('created', 'running', 'failed', 'paused')
 ORDER BY updated_at DESC;
 ```
 
-### `GET /api/v1/allocations/running`
+### [x] `GET /api/v1/allocations/running`
 
 ดู allocation ที่กำลัง run อยู่จริง
 
@@ -262,7 +373,7 @@ WHERE status = 'running'
 ORDER BY updated_at DESC;
 ```
 
-### `GET /api/v1/allocations/cancelled`
+### [x] `GET /api/v1/allocations/cancelled`
 
 ดู allocation ที่ถูก cancel
 
@@ -281,7 +392,7 @@ Query params:
 - เหตุผล cancel ปัจจุบันอยู่ใน `allocations.note`
 - note อาจเป็น prefix เช่น `execution_rejected: ...` หรือ `sizing_blocked: ...`
 
-### `GET /api/v1/allocations/cancelled/reasons`
+### [x] `GET /api/v1/allocations/cancelled/reasons`
 
 สรุป cancel reason
 
@@ -295,7 +406,7 @@ GROUP BY COALESCE(note, 'unknown')
 ORDER BY count DESC;
 ```
 
-### `GET /api/v1/allocations/{id}`
+### [x] `GET /api/v1/allocations/{id}`
 
 ดูรายละเอียด allocation เดียว
 
@@ -308,7 +419,7 @@ ORDER BY count DESC;
 - progress events
 - PnL events ของ pair นั้นในช่วง allocation
 
-### `GET /api/v1/allocations/{id}/timeline`
+### [x] `GET /api/v1/allocations/{id}/timeline`
 
 แสดง timeline ของ allocation ตั้งแต่ created จนจบ
 
@@ -372,7 +483,7 @@ CREATE INDEX idx_allocation_events_reason_time
     ON allocation_events (reason, event_time DESC);
 ```
 
-### `GET /api/v1/allocation-events`
+### [ ] `GET /api/v1/allocation-events`
 
 List allocation events
 
@@ -388,7 +499,7 @@ Query params:
 - `cursor`
 - `limit`
 
-### `GET /api/v1/allocation-events/summary`
+### [ ] `GET /api/v1/allocation-events/summary`
 
 สรุปจำนวน event ตาม stage/reason
 
@@ -407,7 +518,7 @@ Data source:
 - table: `instruments`
 - repo: `internal/repo/instrument.go`
 
-### `GET /api/v1/instruments`
+### [ ] `GET /api/v1/instruments`
 
 Query params:
 
@@ -432,7 +543,7 @@ Response fields:
 - `funding_interval`
 - `launch_time`
 
-### `GET /api/v1/pairs`
+### [ ] `GET /api/v1/pairs`
 
 List pair รวมข้าม exchange
 
@@ -446,7 +557,7 @@ List pair รวมข้าม exchange
 - latest OI skew
 - latest market quality status
 
-### `GET /api/v1/pairs/{base}-{quote}/latest`
+### [ ] `GET /api/v1/pairs/{base}-{quote}/latest`
 
 ดู snapshot ล่าสุดของ pair เดียว
 
@@ -466,7 +577,7 @@ Data source:
 - table: `funding`
 - repo: `internal/repo/funding.go`
 
-### `GET /api/v1/funding/latest`
+### [ ] `GET /api/v1/funding/latest`
 
 ดู funding ล่าสุด
 
@@ -476,7 +587,7 @@ Query params:
 - `base`
 - `quote`
 
-### `GET /api/v1/funding/history`
+### [ ] `GET /api/v1/funding/history`
 
 ดู historical funding
 
@@ -489,7 +600,7 @@ Query params:
 - `to`
 - `limit`
 
-### `GET /api/v1/funding/spread`
+### [ ] `GET /api/v1/funding/spread`
 
 ดู spread ระหว่าง Bybit และ Bitget
 
@@ -507,7 +618,7 @@ Response idea:
 }
 ```
 
-### `GET /api/v1/funding/top-spreads`
+### [ ] `GET /api/v1/funding/top-spreads`
 
 หา pair ที่ funding spread สูงสุด
 
@@ -526,7 +637,7 @@ Data source:
 - table: `open_interest`
 - repo: `internal/repo/open_interest.go`
 
-### `GET /api/v1/open-interest/latest`
+### [ ] `GET /api/v1/open-interest/latest`
 
 ดู OI ล่าสุด
 
@@ -536,7 +647,7 @@ Query params:
 - `base`
 - `quote`
 
-### `GET /api/v1/open-interest/history`
+### [ ] `GET /api/v1/open-interest/history`
 
 ดู historical OI
 
@@ -549,7 +660,7 @@ Query params:
 - `to`
 - `limit`
 
-### `GET /api/v1/open-interest/skew`
+### [ ] `GET /api/v1/open-interest/skew`
 
 ดู OI skew ระหว่างสอง exchange
 
@@ -568,7 +679,7 @@ Data source:
 - table: `market_quality_metrics_1m`
 - repo: `internal/repo/market_quality_metric.go`
 
-### `GET /api/v1/market-quality/latest`
+### [ ] `GET /api/v1/market-quality/latest`
 
 ดู market quality ล่าสุด
 
@@ -591,7 +702,7 @@ Response fields:
 - `mid_speed_bps_per_sec_p95`
 - `depth_stability_ratio`
 
-### `GET /api/v1/market-quality/history`
+### [ ] `GET /api/v1/market-quality/history`
 
 ดู historical market quality
 
@@ -604,7 +715,7 @@ Query params:
 - `to`
 - `limit`
 
-### `GET /api/v1/market-quality/alerts`
+### [ ] `GET /api/v1/market-quality/alerts`
 
 หา pair ที่ตลาดไม่ดี
 
@@ -630,7 +741,7 @@ Data source:
 - repo: `internal/repo/order.go`
 - repo: `internal/repo/order_progress.go`
 
-### `GET /api/v1/order-routing/{plan_id}`
+### [ ] `GET /api/v1/order-routing/{plan_id}`
 
 ดู routing state ของ plan
 
@@ -650,7 +761,7 @@ Data source:
 - orders
 - executions
 
-### `GET /api/v1/order-routing/{plan_id}/progress`
+### [ ] `GET /api/v1/order-routing/{plan_id}/progress`
 
 ดู progress events ของ plan
 
@@ -666,7 +777,7 @@ Response fields:
 - `reason`
 - `occurred_at`
 
-### `GET /api/v1/orders`
+### [ ] `GET /api/v1/orders`
 
 List order จาก routing table
 
@@ -734,7 +845,7 @@ CREATE INDEX idx_account_events_order_id
     WHERE order_id <> '';
 ```
 
-### `GET /api/v1/account-events`
+### [ ] `GET /api/v1/account-events`
 
 List normalized account events
 
@@ -751,7 +862,7 @@ Query params:
 - `cursor`
 - `limit`
 
-### `GET /api/v1/trades`
+### [ ] `GET /api/v1/trades`
 
 Trade log สำหรับ CRM
 
@@ -773,7 +884,7 @@ Response fields:
 - `order_id`
 - `exec_id`
 
-### `GET /api/v1/positions`
+### [ ] `GET /api/v1/positions`
 
 ดู position events หรือ latest positions
 
@@ -808,7 +919,7 @@ trading_fee
 trading_pnl
 ```
 
-### `GET /api/v1/pnl/events`
+### [ ] `GET /api/v1/pnl/events`
 
 List PnL events
 
@@ -821,7 +932,7 @@ Query params:
 - `from`
 - `to`
 
-### `GET /api/v1/pnl/summary`
+### [ ] `GET /api/v1/pnl/summary`
 
 สรุป PnL รวม
 
@@ -852,15 +963,15 @@ Response example:
 }
 ```
 
-### `GET /api/v1/pnl/by-pair`
+### [ ] `GET /api/v1/pnl/by-pair`
 
 ดู PnL ราย pair
 
-### `GET /api/v1/pnl/by-exchange`
+### [ ] `GET /api/v1/pnl/by-exchange`
 
 ดู PnL ราย exchange
 
-### `GET /api/v1/pnl/by-component`
+### [ ] `GET /api/v1/pnl/by-component`
 
 ดู PnL แยก funding / trading fee / trading pnl
 
@@ -904,7 +1015,7 @@ CREATE INDEX idx_wallet_snapshots_exchange_time
     ON wallet_snapshots (exchange, time DESC);
 ```
 
-### `GET /api/v1/equity/latest`
+### [ ] `GET /api/v1/equity/latest`
 
 ดู equity ล่าสุดราย exchange และรวม
 
@@ -931,7 +1042,7 @@ Response example:
 }
 ```
 
-### `GET /api/v1/equity/curve`
+### [ ] `GET /api/v1/equity/curve`
 
 ดู equity curve ราย exchange
 
@@ -942,7 +1053,7 @@ Query params:
 - `to`
 - `interval`
 
-### `GET /api/v1/equity/curve/combined`
+### [ ] `GET /api/v1/equity/curve/combined`
 
 ดู equity curve รวมสอง exchange
 
@@ -952,7 +1063,7 @@ Logic:
 - sum `account_equity` ของทุก exchange
 - ควร bucket เวลา เช่น 1m, 5m, 1h, 1d
 
-### `GET /api/v1/equity/drawdown`
+### [ ] `GET /api/v1/equity/drawdown`
 
 ดู max drawdown จาก equity curve
 
@@ -987,7 +1098,7 @@ CREATE INDEX idx_alerts_status_created_at
     ON alerts (status, created_at DESC);
 ```
 
-### `GET /api/v1/alerts`
+### [ ] `GET /api/v1/alerts`
 
 List alerts
 
@@ -1000,15 +1111,15 @@ Query params:
 - `from`
 - `to`
 
-### `GET /api/v1/alerts/active`
+### [ ] `GET /api/v1/alerts/active`
 
 ดู alert ที่ยังไม่ resolve
 
-### `POST /api/v1/alerts/{id}/ack`
+### [ ] `POST /api/v1/alerts/{id}/ack`
 
 acknowledge alert
 
-### `POST /api/v1/alerts/{id}/resolve`
+### [ ] `POST /api/v1/alerts/{id}/resolve`
 
 resolve alert
 
@@ -1030,7 +1141,7 @@ Alert ที่ควรมี:
 
 ใช้ส่งข้อมูลไป frontend แบบ live
 
-### `GET /api/v1/sse/events`
+### [ ] `GET /api/v1/sse/events`
 
 Server-Sent Events สำหรับ dashboard
 
@@ -1046,7 +1157,7 @@ Event types:
 - `alert.created`
 - `system.status_changed`
 
-### `GET /api/v1/ws`
+### [ ] `GET /api/v1/ws`
 
 WebSocket สำหรับ realtime monitoring
 
@@ -1072,41 +1183,42 @@ Subscribe message example:
 
 ทำก่อนได้ทันทีโดยไม่แก้ `d:\platform` มาก
 
-1. `GET /api/v1/health`
-2. `GET /api/v1/dashboard/summary`
-3. `GET /api/v1/allocations/summary`
-4. `GET /api/v1/allocations`
-5. `GET /api/v1/allocations/active`
-6. `GET /api/v1/allocations/cancelled/reasons`
-7. `GET /api/v1/funding/latest`
-8. `GET /api/v1/funding/history`
-9. `GET /api/v1/open-interest/latest`
-10. `GET /api/v1/market-quality/latest`
-11. `GET /api/v1/pnl/events`
-12. `GET /api/v1/pnl/summary`
+- [x] `GET /api/v1/health`
+- [ ] `GET /api/v1/dashboard/summary`
+- [x] `GET /api/v1/allocations/summary`
+- [x] `GET /api/v1/allocations`
+- [x] `GET /api/v1/allocations/active`
+- [x] `GET /api/v1/allocations/running`
+- [x] `GET /api/v1/allocations/cancelled/reasons`
+- [ ] `GET /api/v1/funding/latest`
+- [ ] `GET /api/v1/funding/history`
+- [ ] `GET /api/v1/open-interest/latest`
+- [ ] `GET /api/v1/market-quality/latest`
+- [ ] `GET /api/v1/pnl/events`
+- [ ] `GET /api/v1/pnl/summary`
 
 ### Phase 2: เพิ่ม persistence ที่ CRM ต้องใช้
 
 เพิ่ม table:
 
-1. `allocation_events`
-2. `wallet_snapshots`
-3. `account_events`
-4. `alerts`
+- [ ] `allocation_events`
+- [ ] `wallet_snapshots`
+- [ ] `account_events`
+- [ ] `alerts`
 
 ### Phase 3: ทำ timeline และ equity curve
 
-1. `GET /api/v1/allocations/{id}/timeline`
-2. `GET /api/v1/equity/latest`
-3. `GET /api/v1/equity/curve`
-4. `GET /api/v1/equity/curve/combined`
-5. `GET /api/v1/trades`
-6. `GET /api/v1/positions`
+- [x] `GET /api/v1/allocations/{id}/timeline`
+- [ ] `GET /api/v1/equity/latest`
+- [ ] `GET /api/v1/equity/curve`
+- [ ] `GET /api/v1/equity/curve/combined`
+- [ ] `GET /api/v1/trades`
+- [ ] `GET /api/v1/positions`
 
 ### Phase 4: Realtime
 
-1. `GET /api/v1/sse/events`
-2. `GET /api/v1/ws`
+- [ ] `GET /api/v1/sse/events`
+- [ ] `GET /api/v1/ws`
 
 ## 16. Backend Implementation Notes
 
@@ -1186,4 +1298,3 @@ internal/crmapi/httpserver
 
 - เพิ่ม `alerts`
 - ให้ trading engine / CRM job สร้าง alert จาก condition สำคัญ
-
