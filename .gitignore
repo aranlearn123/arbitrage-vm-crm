@@ -1,0 +1,49 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+bin/
+dist/
+build/
+
+# Coverage / profiling
+coverage.out
+coverage.html
+*.coverprofile
+*.prof
+cpu.pprof
+mem.pprof
+
+# Logs / temp files
+*.log
+tmp/
+temp/
+.tmp/
+.cache/
+
+# Frontend dependencies / build output
+node_modules/
+.next/
+.nuxt/
+coverage/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+

@@ -1,0 +1,29 @@
+basePath: /api/v1
+definitions:
+  response.Health:
+    properties:
+      status:
+        type: string
+      time:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: CRM monitoring API for arbitrage trading system.
+  title: Arbitrage VM CRM API
+  version: 0.1.0
+paths:
+  /health:
+    get:
+      description: Check API service status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Health'
+      summary: Health check
+      tags:
+      - System
+swagger: "2.0"

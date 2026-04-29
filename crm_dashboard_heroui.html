@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="th" data-theme="crm">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arbitrage CRM Monitoring</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "Noto Sans Thai", "Segoe UI", "Arial", "sans-serif"],
+            },
+            colors: {
+              canvas: "var(--crm-canvas)",
+              panel: "var(--crm-panel)",
+              ink: "var(--crm-ink)",
+              muted: "var(--crm-muted)",
+              line: "var(--crm-line)",
+              accent: "var(--crm-accent)",
+              good: "var(--crm-good)",
+              warn: "var(--crm-warn)",
+              bad: "var(--crm-bad)",
+            },
+            boxShadow: {
+              panel: "0 1px 2px rgba(15, 23, 42, 0.06), 0 12px 28px rgba(15, 23, 42, 0.05)",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      :root {
+        --crm-canvas: #0f1218;
+        --crm-panel: #171b23;
+        --crm-panel-2: #1e2430;
+        --crm-ink: #eef3f8;
+        --crm-muted: #99a6b8;
+        --crm-line: #2b3341;
+        --crm-accent: #4c8dff;
+        --crm-good: #31c48d;
+        --crm-warn: #f0b44c;
+        --crm-bad: #f46d75;
+        --crm-teal: #2dd4bf;
+        --crm-violet: #a78bfa;
+        --crm-radius: 8px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100vh;
+        background: var(--crm-canvas);
+        color: var(--crm-ink);
+      }
+
+      .hero-card {
+        border-radius: var(--crm-radius);
+        border: 1px solid var(--crm-line);
+        background: var(--crm-panel);
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.22), 0 18px 36px rgba(0, 0, 0, 0.16);
+      }
+
+      .hero-button {
+        display: inline-flex;
+        min-height: 36px;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border-radius: 7px;
+        border: 1px solid var(--crm-line);
+        background: var(--crm-panel-2);
+        padding: 0 12px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--crm-ink);
+        transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
+      }
+
+      .hero-button:hover {
+        border-color: #46556b;
+        background: #252c3a;
+      }
+
+      .hero-button-primary {
+        border-color: var(--crm-accent);
+        background: var(--crm-accent);
+        color: #fff;
+      }
+
+      .hero-chip {
+        display: inline-flex;
+        min-height: 24px;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 0 9px;
+        font-size: 12px;
+        font-weight: 650;
+        white-space: nowrap;
+      }
+
+      .chip-good {
+        background: rgba(49, 196, 141, 0.16);
+        color: #74e4b7;
+      }
+
+      .chip-warn {
+        background: rgba(240, 180, 76, 0.18);
+        color: #ffd285;
+      }
+
+      .chip-bad {
+        background: rgba(244, 109, 117, 0.16);
+        color: #ff9aa1;
+      }
+
+      .chip-neutral {
+        background: #273141;
+        color: #c8d2df;
+      }
+
+      .icon {
+        width: 16px;
+        height: 16px;
+        stroke-width: 2;
+      }
+
+      .nav-item {
+        display: flex;
+        height: 36px;
+        align-items: center;
+        gap: 10px;
+        border-radius: 7px;
+        padding: 0 10px;
+        color: #a7b3c4;
+        font-size: 13px;
+        font-weight: 650;
+      }
+
+      .nav-item.active {
+        background: rgba(76, 141, 255, 0.14);
+        color: #b7d0ff;
+      }
+
+      .kpi-grid {
+        grid-template-columns: repeat(4, minmax(180px, 1fr));
+      }
+
+      .app-grid {
+        grid-template-columns: minmax(0, 1.58fr) minmax(320px, 0.82fr);
+      }
+
+      .state-bar {
+        display: grid;
+        grid-template-columns: 1fr 2.2fr 56px;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .bar-track {
+        height: 9px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #252d3a;
+      }
+
+      .bar-fill {
+        height: 100%;
+        border-radius: 999px;
+      }
+
+      .allocation-row {
+        display: grid;
+        grid-template-columns: 82px 110px 118px 112px minmax(260px, 1fr) 92px;
+        min-width: 820px;
+        align-items: center;
+      }
+
+      .allocation-row:hover:not(.allocation-head) {
+        background: rgba(255, 255, 255, 0.025);
+      }
+
+      .trade-log-row {
+        display: grid;
+        grid-template-columns: 72px 92px 76px 82px 86px 1fr;
+        min-width: 620px;
+        align-items: center;
+      }
+
+      .soft-panel {
+        background: var(--crm-panel-2);
+      }
+
+      .chart-panel {
+        background: #121720;
+      }
+
+      .alert-danger {
+        border-color: rgba(244, 109, 117, 0.38);
+        background: rgba(244, 109, 117, 0.10);
+      }
+
+      .alert-warning {
+        border-color: rgba(240, 180, 76, 0.38);
+        background: rgba(240, 180, 76, 0.10);
+      }
+      }
+
+      @media (max-width: 1180px) {
+        .kpi-grid {
+          grid-template-columns: repeat(2, minmax(160px, 1fr));
+        }
+
+        .app-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: static;
+          height: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--crm-line);
+        }
+
+        .kpi-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .mobile-wrap {
+          flex-wrap: wrap;
+        }
+      }
+    </style>
+  </head>
+  <body class="font-sans antialiased">
+    <div class="shell grid min-h-screen grid-cols-[248px_1fr]">
+      <aside class="sidebar sticky top-0 h-screen border-r border-line bg-[#121720] px-4 py-4">
+        <div class="flex h-11 items-center gap-3">
+          <div class="grid h-9 w-9 place-items-center rounded-[8px] bg-accent text-white">
+            <i data-lucide="activity" class="icon"></i>
+          </div>
+          <div>
+            <div class="text-[14px] font-bold leading-5">Arbitrage CRM</div>
+            <div class="text-[12px] font-medium text-muted">Bybit / Bitget</div>
+          </div>
+        </div>
+
+        <nav class="mt-7 space-y-1">
+          <a class="nav-item active" href="#overview"><i data-lucide="layout-dashboard" class="icon"></i>Overview</a>
+          <a class="nav-item" href="#allocations"><i data-lucide="workflow" class="icon"></i>Allocations</a>
+          <a class="nav-item" href="#equity"><i data-lucide="line-chart" class="icon"></i>Equity & PnL</a>
+          <a class="nav-item" href="#market"><i data-lucide="radio-tower" class="icon"></i>Market Quality</a>
+          <a class="nav-item" href="#trades"><i data-lucide="receipt-text" class="icon"></i>Trade Log</a>
+          <a class="nav-item" href="#alerts"><i data-lucide="triangle-alert" class="icon"></i>Alerts</a>
+        </nav>
+
+        <div class="soft-panel mt-7 rounded-[8px] border border-line p-3">
+          <div class="flex items-center justify-between">
+            <span class="text-[12px] font-bold uppercase text-muted">Engine</span>
+            <span class="hero-chip chip-good"><span class="h-2 w-2 rounded-full bg-good"></span>Ready</span>
+          </div>
+          <div class="mt-3 space-y-2 text-[12px] text-muted">
+            <div class="flex justify-between"><span>Funding sync</span><span class="font-semibold text-ink">42s ago</span></div>
+            <div class="flex justify-between"><span>OI sync</span><span class="font-semibold text-ink">58s ago</span></div>
+            <div class="flex justify-between"><span>Wallet sync</span><span class="font-semibold text-ink">1m ago</span></div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="min-w-0 px-5 py-4 lg:px-7">
+        <header class="mobile-wrap flex items-center justify-between gap-3 border-b border-line pb-4">
+          <div>
+            <h1 class="text-[22px] font-bold leading-7 tracking-normal">Trading Monitoring</h1>
+            <p class="mt-1 text-[13px] font-medium text-muted">Live state, allocations, PnL, equity curve, and exchange metrics</p>
+          </div>
+          <div class="mobile-wrap flex items-center gap-2">
+            <button class="hero-button" title="Refresh dashboard"><i data-lucide="refresh-cw" class="icon"></i>Refresh</button>
+            <button class="hero-button" title="Export report"><i data-lucide="download" class="icon"></i>Export</button>
+            <button class="hero-button hero-button-primary" title="Open alerts"><i data-lucide="bell" class="icon"></i>Alerts 4</button>
+          </div>
+        </header>
+
+        <section id="overview" class="mt-5 grid kpi-grid gap-4">
+          <article class="hero-card p-4">
+            <div class="flex items-center justify-between">
+              <span class="text-[13px] font-semibold text-muted">Total Equity</span>
+              <i data-lucide="wallet" class="icon text-accent"></i>
+            </div>
+            <div class="mt-3 text-[26px] font-bold leading-8">$10,502.31</div>
+            <div class="mt-2 flex items-center gap-2 text-[12px] font-semibold text-good">
+              <i data-lucide="trending-up" class="icon"></i>+1.42% today
+            </div>
+          </article>
+
+          <article class="hero-card p-4">
+            <div class="flex items-center justify-between">
+              <span class="text-[13px] font-semibold text-muted">Funding PnL</span>
+              <i data-lucide="coins" class="icon text-good"></i>
+            </div>
+            <div class="mt-3 text-[26px] font-bold leading-8 text-good">+$18.20</div>
+            <div class="mt-2 text-[12px] font-semibold text-muted">Bybit +$9.80 / Bitget +$8.40</div>
+          </article>
+
+          <article class="hero-card p-4">
+            <div class="flex items-center justify-between">
+              <span class="text-[13px] font-semibold text-muted">Active Allocations</span>
+              <i data-lucide="workflow" class="icon text-[#6d5bd0]"></i>
+            </div>
+            <div class="mt-3 text-[26px] font-bold leading-8">7</div>
+            <div class="mt-2 flex gap-2">
+              <span class="hero-chip chip-good">2 running</span>
+              <span class="hero-chip chip-warn">4 failed</span>
+            </div>
+          </article>
+
+          <article class="hero-card p-4">
+            <div class="flex items-center justify-between">
+              <span class="text-[13px] font-semibold text-muted">Cancelled Today</span>
+              <i data-lucide="octagon-x" class="icon text-bad"></i>
+            </div>
+            <div class="mt-3 text-[26px] font-bold leading-8">35</div>
+            <div class="mt-2 text-[12px] font-semibold text-bad">12 insufficient edge</div>
+          </article>
+        </section>
+
+        <div class="mt-5 grid app-grid gap-4">
+          <section id="allocations" class="min-w-0 space-y-4">
+            <div class="hero-card p-4">
+              <div class="mobile-wrap flex items-center justify-between gap-3">
+                <div>
+                  <h2 class="text-[16px] font-bold">Allocation States</h2>
+                  <p class="mt-1 text-[12px] font-medium text-muted">Current lifecycle distribution from allocations table</p>
+                </div>
+                <div class="soft-panel flex rounded-[8px] border border-line p-1">
+                  <button class="rounded-[6px] bg-[#283246] px-3 py-1.5 text-[12px] font-bold shadow-sm">Today</button>
+                  <button class="px-3 py-1.5 text-[12px] font-bold text-muted">7D</button>
+                  <button class="px-3 py-1.5 text-[12px] font-bold text-muted">30D</button>
+                </div>
+              </div>
+
+              <div class="mt-4 grid gap-3">
+                <div class="state-bar">
+                  <span class="text-[13px] font-semibold">Running</span>
+                  <div class="bar-track"><div class="bar-fill bg-good" style="width: 18%"></div></div>
+                  <span class="text-right text-[13px] font-bold">2</span>
+                </div>
+                <div class="state-bar">
+                  <span class="text-[13px] font-semibold">Created</span>
+                  <div class="bar-track"><div class="bar-fill bg-accent" style="width: 9%"></div></div>
+                  <span class="text-right text-[13px] font-bold">1</span>
+                </div>
+                <div class="state-bar">
+                  <span class="text-[13px] font-semibold">Failed</span>
+                  <div class="bar-track"><div class="bar-fill bg-warn" style="width: 36%"></div></div>
+                  <span class="text-right text-[13px] font-bold">4</span>
+                </div>
+                <div class="state-bar">
+                  <span class="text-[13px] font-semibold">Cancelled</span>
+                  <div class="bar-track"><div class="bar-fill bg-bad" style="width: 100%"></div></div>
+                  <span class="text-right text-[13px] font-bold">35</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="hero-card overflow-hidden">
+              <div class="flex items-center justify-between border-b border-line px-4 py-3">
+                <h2 class="text-[16px] font-bold">Active Allocations</h2>
+                <button class="hero-button" title="Filter allocations"><i data-lucide="filter" class="icon"></i>Filter</button>
+              </div>
+              <div class="overflow-x-auto">
+                <div class="allocation-row allocation-head border-b border-line bg-[#121720] px-4 py-2.5 text-[11px] font-bold uppercase text-muted">
+                  <div>ID</div><div>Pair</div><div>Status</div><div>Budget</div><div>Note</div><div class="text-right">Updated</div>
+                </div>
+                <div class="allocation-row border-b border-line px-4 py-3 text-[13px]">
+                  <div class="font-bold text-[#dbe8ff]">#184</div>
+                  <div><div class="font-bold">BTCUSDT</div><div class="text-[11px] text-muted">candidate</div></div>
+                  <div><span class="hero-chip chip-good">running</span></div>
+                  <div class="font-semibold">$500</div>
+                  <div class="min-w-0 truncate text-muted">sizing_active: alloc-184-plan-1</div>
+                  <div class="text-right text-muted">32s</div>
+                </div>
+                <div class="allocation-row border-b border-line px-4 py-3 text-[13px]">
+                  <div class="font-bold text-[#dbe8ff]">#183</div>
+                  <div><div class="font-bold">ETHUSDT</div><div class="text-[11px] text-muted">tactical</div></div>
+                  <div><span class="hero-chip chip-good">running</span></div>
+                  <div class="font-semibold">$500</div>
+                  <div class="min-w-0 truncate text-muted">submitted_to_order_management: alloc-183-plan-2</div>
+                  <div class="text-right text-muted">1m</div>
+                </div>
+                <div class="allocation-row border-b border-line px-4 py-3 text-[13px]">
+                  <div class="font-bold text-[#dbe8ff]">#181</div>
+                  <div><div class="font-bold">SOLUSDT</div><div class="text-[11px] text-muted">candidate</div></div>
+                  <div><span class="hero-chip chip-warn">failed</span></div>
+                  <div class="font-semibold">$250</div>
+                  <div class="min-w-0 truncate text-muted">handoff_failed: start_child timeout</div>
+                  <div class="text-right text-muted">4m</div>
+                </div>
+                <div class="allocation-row px-4 py-3 text-[13px]">
+                  <div class="font-bold text-[#dbe8ff]">#179</div>
+                  <div><div class="font-bold">XRPUSDT</div><div class="text-[11px] text-muted">candidate</div></div>
+                  <div><span class="hero-chip chip-neutral">created</span></div>
+                  <div class="font-semibold">$250</div>
+                  <div class="min-w-0 truncate text-muted">waiting worker claim</div>
+                  <div class="text-right text-muted">6m</div>
+                </div>
+              </div>
+            </div>
+
+            <div id="equity" class="hero-card p-4">
+              <div class="mobile-wrap flex items-center justify-between gap-3">
+                <div>
+                  <h2 class="text-[16px] font-bold">Combined Equity Curve</h2>
+                  <p class="mt-1 text-[12px] font-medium text-muted">Requires wallet_snapshots for historical curve</p>
+                </div>
+                <span class="hero-chip chip-good">+$147.63 24h</span>
+              </div>
+              <div class="chart-panel mt-4 h-[260px] w-full rounded-[8px] border border-line p-3">
+                <svg viewBox="0 0 760 220" class="h-full w-full" role="img" aria-label="Combined equity curve">
+                  <defs>
+                    <linearGradient id="equityFill" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.22" />
+                      <stop offset="100%" stop-color="#2563eb" stop-opacity="0.02" />
+                    </linearGradient>
+                  </defs>
+                  <g stroke="#273141" stroke-width="1">
+                    <line x1="36" y1="28" x2="736" y2="28" />
+                    <line x1="36" y1="82" x2="736" y2="82" />
+                    <line x1="36" y1="136" x2="736" y2="136" />
+                    <line x1="36" y1="190" x2="736" y2="190" />
+                  </g>
+                  <path d="M36 168 C92 150 118 158 164 132 C210 106 242 116 286 96 C332 76 370 84 412 70 C456 56 492 76 534 62 C584 45 626 52 674 38 C704 30 724 28 736 24 L736 206 L36 206 Z" fill="url(#equityFill)" />
+                  <path d="M36 168 C92 150 118 158 164 132 C210 106 242 116 286 96 C332 76 370 84 412 70 C456 56 492 76 534 62 C584 45 626 52 674 38 C704 30 724 28 736 24" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round" />
+                  <path d="M36 174 C118 170 162 162 220 146 C302 122 362 128 430 110 C512 88 608 90 736 66" fill="none" stroke="#0f766e" stroke-width="2" stroke-dasharray="6 7" stroke-linecap="round" />
+                  <g fill="#64748b" font-size="12" font-family="Inter, Arial">
+                    <text x="34" y="216" fill="#99a6b8">00:00</text>
+                    <text x="244" y="216" fill="#99a6b8">08:00</text>
+                    <text x="474" y="216" fill="#99a6b8">16:00</text>
+                    <text x="700" y="216" fill="#99a6b8">Now</text>
+                  </g>
+                </svg>
+              </div>
+            </div>
+          </section>
+
+          <aside class="min-w-0 space-y-4">
+            <section class="hero-card p-4">
+              <div class="flex items-center justify-between">
+                <h2 class="text-[16px] font-bold">Cancel Reasons</h2>
+                <span class="hero-chip chip-bad">35 today</span>
+              </div>
+              <div class="mt-4 space-y-3">
+                <div>
+                  <div class="flex justify-between text-[13px] font-semibold"><span>insufficient_net_edge_after_cost</span><span>12</span></div>
+                  <div class="mt-2 bar-track"><div class="bar-fill bg-bad" style="width: 100%"></div></div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-[13px] font-semibold"><span>initial_slice_below_pair_min</span><span>7</span></div>
+                  <div class="mt-2 bar-track"><div class="bar-fill bg-warn" style="width: 58%"></div></div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-[13px] font-semibold"><span>missing_market_data</span><span>5</span></div>
+                  <div class="mt-2 bar-track"><div class="bar-fill bg-accent" style="width: 42%"></div></div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-[13px] font-semibold"><span>role_rejected</span><span>4</span></div>
+                  <div class="mt-2 bar-track"><div class="bar-fill bg-[#6d5bd0]" style="width: 33%"></div></div>
+                </div>
+              </div>
+            </section>
+
+            <section id="alerts" class="hero-card p-4">
+              <div class="flex items-center justify-between">
+                <h2 class="text-[16px] font-bold">Active Alerts</h2>
+                <button class="hero-button" title="Open alert list"><i data-lucide="external-link" class="icon"></i></button>
+              </div>
+              <div class="mt-4 space-y-3">
+                <div class="alert-danger rounded-[8px] border p-3">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-[13px] font-bold text-bad">Hedge imbalance</span>
+                    <span class="hero-chip chip-bad">critical</span>
+                  </div>
+                  <p class="mt-1 text-[12px] font-medium text-[#ffc2c6]">BTCUSDT funding leg filled 2.8x hedge leg</p>
+                </div>
+                <div class="alert-warning rounded-[8px] border p-3">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-[13px] font-bold text-warn">Market stale</span>
+                    <span class="hero-chip chip-warn">warning</span>
+                  </div>
+                  <p class="mt-1 text-[12px] font-medium text-[#ffe0a8]">SOLUSDT Bitget orderbook gap p95 above limit</p>
+                </div>
+                <div class="soft-panel rounded-[8px] border border-line p-3">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-[13px] font-bold">Handoff retry</span>
+                    <span class="hero-chip chip-neutral">info</span>
+                  </div>
+                  <p class="mt-1 text-[12px] font-medium text-muted">Allocation #181 waiting retry after worker start timeout</p>
+                </div>
+              </div>
+            </section>
+
+            <section id="market" class="hero-card p-4">
+              <div class="flex items-center justify-between">
+                <h2 class="text-[16px] font-bold">Funding Spread</h2>
+                <span class="text-[12px] font-bold text-muted">Top pairs</span>
+              </div>
+              <div class="mt-4 space-y-3">
+                <div class="flex items-center justify-between">
+                  <div><div class="text-[13px] font-bold">BTCUSDT</div><div class="text-[12px] text-muted">long Bitget / short Bybit</div></div>
+                  <span class="text-[14px] font-bold text-good">+3.2 bps</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div><div class="text-[13px] font-bold">ETHUSDT</div><div class="text-[12px] text-muted">long Bybit / short Bitget</div></div>
+                  <span class="text-[14px] font-bold text-good">+2.1 bps</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div><div class="text-[13px] font-bold">SOLUSDT</div><div class="text-[12px] text-muted">quality degraded</div></div>
+                  <span class="text-[14px] font-bold text-warn">+1.4 bps</span>
+                </div>
+              </div>
+            </section>
+          </aside>
+        </div>
+
+        <section id="trades" class="hero-card mt-4 overflow-hidden">
+          <div class="mobile-wrap flex items-center justify-between gap-3 border-b border-line px-4 py-3">
+            <h2 class="text-[16px] font-bold">Trade Log</h2>
+            <div class="mobile-wrap flex gap-2">
+              <button class="hero-button" title="Choose exchange"><i data-lucide="building-2" class="icon"></i>All exchanges</button>
+              <button class="hero-button" title="Choose time range"><i data-lucide="calendar-days" class="icon"></i>Today</button>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <div class="trade-log-row border-b border-line bg-[#121720] px-4 py-2 text-[12px] font-bold uppercase text-muted">
+              <div>Time</div><div>Exchange</div><div>Pair</div><div>Side</div><div>Value</div><div>Event</div>
+            </div>
+            <div class="trade-log-row border-b border-line px-4 py-3 text-[13px]">
+              <div class="text-muted">09:18</div><div>Bybit</div><div>BTCUSDT</div><div><span class="hero-chip chip-good">buy</span></div><div>$248.40</div><div class="truncate">execution fill, maker, fee -0.012 USDT</div>
+            </div>
+            <div class="trade-log-row border-b border-line px-4 py-3 text-[13px]">
+              <div class="text-muted">09:18</div><div>Bitget</div><div>BTCUSDT</div><div><span class="hero-chip chip-bad">sell</span></div><div>$248.21</div><div class="truncate">hedge leg follow order filled</div>
+            </div>
+            <div class="trade-log-row border-b border-line px-4 py-3 text-[13px]">
+              <div class="text-muted">09:12</div><div>Bitget</div><div>ETHUSDT</div><div><span class="hero-chip chip-good">buy</span></div><div>$189.80</div><div class="truncate">position update, unrealized pnl +0.42</div>
+            </div>
+            <div class="trade-log-row px-4 py-3 text-[13px]">
+              <div class="text-muted">09:07</div><div>Bybit</div><div>SOLUSDT</div><div><span class="hero-chip chip-neutral">cancel</span></div><div>$0.00</div><div class="truncate">order cancelled after market quality degraded</div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      lucide.createIcons();
+    </script>
+  </body>
+</html>
