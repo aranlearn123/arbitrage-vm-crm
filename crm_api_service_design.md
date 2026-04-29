@@ -28,8 +28,8 @@
 ### System / Health API
 
 - [x] `GET /api/v1/health`
-- [ ] `GET /api/v1/system/status`
-- [ ] `GET /api/v1/system/exchanges`
+- [x] `GET /api/v1/system/status`
+- [x] `GET /api/v1/system/exchanges`
 
 ### Dashboard Summary API
 
@@ -62,10 +62,10 @@
 
 ### Funding API
 
-- [ ] `GET /api/v1/funding/latest`
-- [ ] `GET /api/v1/funding/history`
-- [ ] `GET /api/v1/funding/spread`
-- [ ] `GET /api/v1/funding/top-spreads`
+- [x] `GET /api/v1/funding/latest`
+- [x] `GET /api/v1/funding/history`
+- [x] `GET /api/v1/funding/spread`
+- [x] `GET /api/v1/funding/top-spreads`
 
 ### Open Interest API
 
@@ -75,9 +75,9 @@
 
 ### Market Quality API
 
-- [ ] `GET /api/v1/market-quality/latest`
-- [ ] `GET /api/v1/market-quality/history`
-- [ ] `GET /api/v1/market-quality/alerts`
+- [x] `GET /api/v1/market-quality/latest`
+- [x] `GET /api/v1/market-quality/history`
+- [x] `GET /api/v1/market-quality/alerts`
 
 ### Order Routing / Execution Flow API
 
@@ -94,16 +94,17 @@
 
 ### PnL API
 
-- [ ] `GET /api/v1/pnl/events`
-- [ ] `GET /api/v1/pnl/summary`
-- [ ] `GET /api/v1/pnl/by-pair`
-- [ ] `GET /api/v1/pnl/by-exchange`
-- [ ] `GET /api/v1/pnl/by-component`
+- [x] `GET /api/v1/pnl/events`
+- [x] `GET /api/v1/pnl/summary`
+- [x] `GET /api/v1/pnl/by-pair`
+- [x] `GET /api/v1/pnl/by-exchange`
+- [x] `GET /api/v1/pnl/by-component`
 
 ### Equity Curve API
 
 - [ ] Create table `wallet_snapshots`
-- [ ] `GET /api/v1/equity/latest`
+- [x] `GET /api/v1/equity/latest`
+- [x] `GET /api/v1/equity/live`
 - [ ] `GET /api/v1/equity/curve`
 - [ ] `GET /api/v1/equity/curve/combined`
 - [ ] `GET /api/v1/equity/drawdown`
@@ -120,6 +121,144 @@
 
 - [ ] `GET /api/v1/sse/events`
 - [ ] `GET /api/v1/ws`
+
+## Implemented So Far
+
+Last updated: 2026-04-29
+
+Current backend route source:
+
+- `backend/cmd/api/main.go`
+- Swagger: `GET /swagger/*`
+- API base path: `/api/v1`
+
+### Backend Foundation
+
+- [x] วางโครงสร้าง Go Fiber backend ใน `backend/`
+- [x] โหลด config จาก `.env`
+- [x] เชื่อม PostgreSQL ด้วย Bun และ `pgdriver`
+- [x] เพิ่ม route Swagger ที่ `GET /swagger/*`
+- [x] เพิ่ม `.gitignore` เพื่อกัน `.env`, binary, log, temp file และ swagger build artifact ที่ไม่ควร commit
+- [x] เพิ่ม `backend/README.md` สำหรับวิธี setup, run, swagger และ health check
+
+### Health Check
+
+- [x] `GET /api/v1/health`
+- [x] ตรวจสถานะ API process
+- [x] ตรวจ database ด้วย `PingContext`
+- [x] คืน `503 Service Unavailable` ถ้า database ไม่พร้อม
+
+Current response fields:
+
+- `status`
+- `time`
+- `checks.api`
+- `checks.database`
+
+### System API
+
+- [x] `GET /api/v1/system/status`
+  - ตรวจ API version, database, TimescaleDB extension, latest market data, allocation count และ exchange status รวม
+  - คืน `status = ok | degraded | unhealthy`
+- [x] `GET /api/v1/system/exchanges`
+  - list exchange ที่ CRM backend รองรับ: `bitget`, `bybit`
+  - แสดง `credential_configured`, `demo`, `last_funding_at`, `last_open_interest_at`, `last_market_quality_at`, `last_market_data_at`
+  - `last_account_event_at` และ `last_wallet_snapshot_at` ยังว่าง เพราะยังไม่มี persistence table สำหรับ account events / wallet snapshots
+
+### Allocation API
+
+- [x] `GET /api/v1/allocations`
+  - ใช้สำหรับตาราง CRM หน้า Active/History
+  - filter ได้ด้วย `status`, `base`, `quote`, `role`, `limit`
+- [x] `GET /api/v1/allocations/summary`
+  - สรุปจำนวน allocation ตาม `status`
+  - สรุป cancel reason โดย normalize note ให้เหลือ reason หลัก เช่น `insufficient_net_edge_after_cost`
+- [x] `GET /api/v1/allocations/active`
+  - ดู allocation ที่ยัง active หรือยังไม่จบ flow
+- [x] `GET /api/v1/allocations/running`
+  - ดู allocation ที่อยู่สถานะ `running`
+- [x] `GET /api/v1/allocations/cancelled`
+  - ดู allocation ที่ถูก cancel
+  - filter ได้ด้วย `base`, `quote`, `role`, `reason`, `limit`
+  - `reason` ใช้ partial match แบบ `ILIKE '%reason%'` เพื่อให้ค้น `insufficient_net_edge_after_cost` เจอ note แบบเต็ม เช่น `execution_rejected: insufficient_net_edge_after_cost; signal_bps=...`
+- [x] `GET /api/v1/allocations/cancelled/reasons`
+  - group cancel reason หลักจาก `note`
+  - ตัดรายละเอียด metric เช่น `signal_bps`, `cost_bps`, `net_bps`, `required_bps` ออกจาก summary
+- [x] `GET /api/v1/allocations/{id}`
+  - ดูรายละเอียด allocation ตาม id
+- [x] `GET /api/v1/allocations/{id}/timeline`
+  - รวม timeline จาก `allocations`, `scaling_plans`, `recovery_decisions`, `order_management_routing_states`, `order_management_progress_events`
+
+### Funding API
+
+- [x] `GET /api/v1/funding/latest`
+  - อ่าน latest funding rate ต่อ `exchange/base/quote`
+  - filter ได้ด้วย `exchange`, `base`, `quote`, `limit`
+- [x] `GET /api/v1/funding/history`
+  - อ่าน historical funding rate
+  - filter ได้ด้วย `exchange`, `base`, `quote`, `from`, `to`, `limit`
+- [x] `GET /api/v1/funding/spread`
+  - คำนวณ latest spread ระหว่าง Bybit และ Bitget สำหรับ pair เดียว
+  - คืน `bybit_rate`, `bitget_rate`, `spread`, `spread_bps`, `abs_spread_bps`, `direction_hint`
+- [x] `GET /api/v1/funding/top-spreads`
+  - จัดอันดับ pair ที่มี absolute funding spread สูงสุด
+  - filter ได้ด้วย `base`, `quote`, `min_abs_spread_bps`, `limit`
+
+### Market Quality API
+
+- [x] `GET /api/v1/market-quality/latest`
+  - อ่าน latest market quality ต่อ `exchange/base/quote`
+  - filter ได้ด้วย `exchange`, `base`, `quote`, `limit`
+- [x] `GET /api/v1/market-quality/history`
+  - อ่าน historical market quality metrics
+  - filter ได้ด้วย `exchange`, `base`, `quote`, `from`, `to`, `limit`
+- [x] `GET /api/v1/market-quality/alerts`
+  - คืน row ล่าสุดที่ผิด threshold แบบง่ายสำหรับ CRM
+  - alert reason ปัจจุบัน: `low_samples`, `wide_spread`, `fast_mid_price`, `unstable_depth`
+
+### PnL API
+
+- [x] `GET /api/v1/pnl/events`
+  - อ่าน ledger จาก `pnl_events`
+  - filter ได้ด้วย `exchange`, `base`, `quote`, `component`, `source_type`, `source_id`, `from`, `to`, `limit`
+- [x] `GET /api/v1/pnl/summary`
+  - สรุป `total_amount`, `funding_amount`, `trading_fee_amount`, `trading_pnl_amount`
+  - คืน breakdown ตาม component, exchange และ pair
+- [x] `GET /api/v1/pnl/by-pair`
+  - group PnL ตาม `base/quote`
+- [x] `GET /api/v1/pnl/by-exchange`
+  - group PnL ตาม exchange
+- [x] `GET /api/v1/pnl/by-component`
+  - group PnL ตาม `funding`, `trading_fee`, `trading_pnl`
+
+### Equity API
+
+- [x] `GET /api/v1/equity/latest`
+  - temporary live pull จาก Bybit/Bitget exchange API โดยตรง
+  - ใช้ credential จาก `backend/.env`
+  - มี backend cache สั้นๆ ตาม `EQUITY_CACHE_TTL_SECONDS`
+- [x] `GET /api/v1/equity/live`
+  - alias ของ `GET /api/v1/equity/latest`
+- [ ] `GET /api/v1/equity/curve`
+  - ยังทำไม่ได้จนกว่าจะมี `wallet_snapshots`
+- [ ] `GET /api/v1/equity/curve/combined`
+  - ยังทำไม่ได้จนกว่าจะมี `wallet_snapshots`
+- [ ] `GET /api/v1/equity/drawdown`
+  - ยังทำไม่ได้จนกว่าจะมี `wallet_snapshots`
+
+### Verified
+
+- [x] รัน `go test ./...` ผ่าน
+- [x] ทดสอบ live endpoint กับ database แล้วสำหรับ health, allocation summary, cancelled list, detail และ timeline
+- [x] ทดสอบ `GET /api/v1/allocations/cancelled?reason=insufficient_net_edge_after_cost&limit=3` แล้ว query แบบ partial match คืน row ได้
+- [x] ทดสอบ live endpoint กับ database แล้วสำหรับ funding latest, funding spread, funding top-spreads, market-quality latest, market-quality history และ market-quality alerts
+- [x] รัน `go test ./...` หลังเพิ่ม PnL API ผ่าน
+- [x] Live test PnL API กับ database จริงผ่านแล้ว: health ok, PnL endpoints ตอบ 200 แต่ `pnl_events` ยังไม่มี row จึงคืน `count: 0`
+- [x] Live test `GET /api/v1/equity/latest?quote=USDT&refresh=true` ผ่าน ได้ snapshot จาก `bitget` และ `bybit`
+- [x] ทดสอบ cache ของ equity API ผ่าน: request ถัดไปคืน `cached=true`
+- [x] รัน `go test ./...` หลังเพิ่ม System API ผ่าน
+- [x] Swagger มี `GET /api/v1/system/status` และ `GET /api/v1/system/exchanges`
+- [ ] Live test System API รอบล่าสุดยังติด local DB config: service ฟังที่ port `5435` แต่ credential ที่มีใน `.env` / `D:\platform\.env` auth ไม่ผ่าน
 
 ## 1. System / Health API
 
@@ -138,17 +277,18 @@ Response example:
 }
 ```
 
-### [ ] `GET /api/v1/system/status`
+### [x] `GET /api/v1/system/status`
 
 ดูสถานะรวมของ service สำคัญ
 
-ควรแสดง:
+แสดง:
 
 - database connected หรือไม่
 - TimescaleDB ใช้งานได้หรือไม่
 - exchange ที่รองรับ เช่น `bybit`, `bitget`
 - last sync time ของ funding, open interest, market quality
 - API version
+- allocation total / running count
 
 Data source:
 
@@ -156,8 +296,24 @@ Data source:
 - ตาราง `funding`
 - ตาราง `open_interest`
 - ตาราง `market_quality_metrics_1m`
+- ตาราง `allocations`
 
-### [ ] `GET /api/v1/system/exchanges`
+Response fields:
+
+- `status`
+- `time`
+- `api_version`
+- `database`
+- `timescale`
+- `market_data.funding_last_at`
+- `market_data.open_interest_last_at`
+- `market_data.market_quality_last_at`
+- `allocations.total`
+- `allocations.running`
+- `allocations.last_updated_at`
+- `exchanges`
+
+### [x] `GET /api/v1/system/exchanges`
 
 ดู exchange ที่ระบบรองรับและสถานะล่าสุด
 
@@ -165,12 +321,26 @@ Response fields:
 
 - `exchange`
 - `enabled`
+- `supported`
+- `credential_configured`
+- `demo`
 - `last_market_data_at`
+- `last_funding_at`
+- `last_open_interest_at`
+- `last_market_quality_at`
 - `last_account_event_at`
 - `last_wallet_snapshot_at`
 - `status`
+- `notes`
 
-หมายเหตุ: `last_account_event_at` และ `last_wallet_snapshot_at` ต้องมี persistence เพิ่ม ถ้าต้องการ historical/restart-safe
+Status rules:
+
+- `ok`: มี market data ล่าสุดและ credential configured
+- `degraded`: credential ยังไม่ครบ แต่ยังมี market data
+- `stale`: market data เก่ากว่า 10 นาที
+- `no_data`: ยังไม่เห็น market data ใน DB
+
+หมายเหตุ: `last_account_event_at` และ `last_wallet_snapshot_at` ยังว่าง เพราะต้องมี persistence เพิ่ม ถ้าต้องการ historical/restart-safe
 
 ## 2. Dashboard Summary API
 
@@ -575,9 +745,9 @@ List pair รวมข้าม exchange
 Data source:
 
 - table: `funding`
-- repo: `internal/repo/funding.go`
+- repo: `internal/repo/funding_repo.go`
 
-### [ ] `GET /api/v1/funding/latest`
+### [x] `GET /api/v1/funding/latest`
 
 ดู funding ล่าสุด
 
@@ -586,8 +756,18 @@ Query params:
 - `exchange`
 - `base`
 - `quote`
+- `limit`
 
-### [ ] `GET /api/v1/funding/history`
+Response fields:
+
+- `time`
+- `exchange`
+- `base`
+- `quote`
+- `pair`
+- `funding_rate`
+
+### [x] `GET /api/v1/funding/history`
 
 ดู historical funding
 
@@ -600,33 +780,72 @@ Query params:
 - `to`
 - `limit`
 
-### [ ] `GET /api/v1/funding/spread`
+Response fields:
+
+- `time`
+- `exchange`
+- `base`
+- `quote`
+- `pair`
+- `funding_rate`
+
+### [x] `GET /api/v1/funding/spread`
 
 ดู spread ระหว่าง Bybit และ Bitget
 
-Response idea:
+Query params:
+
+- `base` required
+- `quote` default `USDT`
+
+Current response example:
 
 ```json
 {
-  "base": "BTC",
-  "quote": "USDT",
-  "bybit_rate": "0.0001",
-  "bitget_rate": "-0.0002",
-  "spread": "0.0003",
-  "direction_hint": "long_bitget_short_bybit",
-  "time": "2026-04-29T02:00:00Z"
+  "data": {
+    "time": "2026-04-29T05:30:00Z",
+    "base": "BTC",
+    "quote": "USDT",
+    "pair": "BTCUSDT",
+    "bybit_rate": "-0.00000113",
+    "bitget_rate": "-0.000103",
+    "spread": "0.00010187",
+    "spread_bps": "1.01870000",
+    "abs_spread_bps": "1.01870000",
+    "direction_hint": "short_bybit_long_bitget",
+    "bybit_time": "2026-04-29T05:30:00Z",
+    "bitget_time": "2026-04-29T05:29:59Z"
+  }
 }
 ```
 
-### [ ] `GET /api/v1/funding/top-spreads`
+หมายเหตุ: `direction_hint` เป็นมุมมอง trade direction คร่าวๆ จาก funding spread ล่าสุด ไม่ใช่คำสั่งเทรดจริง เพราะยังต้องผ่าน market quality, OI, allocation budget และ execution gate
+
+### [x] `GET /api/v1/funding/top-spreads`
 
 หา pair ที่ funding spread สูงสุด
 
 Query params:
 
 - `quote`
+- `base`
 - `limit`
 - `min_abs_spread_bps`
+
+Response fields:
+
+- `time`
+- `base`
+- `quote`
+- `pair`
+- `bybit_rate`
+- `bitget_rate`
+- `spread`
+- `spread_bps`
+- `abs_spread_bps`
+- `direction_hint`
+- `bybit_time`
+- `bitget_time`
 
 ## 7. Open Interest API
 
@@ -677,9 +896,9 @@ Query params:
 Data source:
 
 - table: `market_quality_metrics_1m`
-- repo: `internal/repo/market_quality_metric.go`
+- repo: `internal/repo/market_quality_repo.go`
 
-### [ ] `GET /api/v1/market-quality/latest`
+### [x] `GET /api/v1/market-quality/latest`
 
 ดู market quality ล่าสุด
 
@@ -688,21 +907,23 @@ Query params:
 - `exchange`
 - `base`
 - `quote`
+- `limit`
 
 Response fields:
 
+- `time`
+- `exchange`
+- `base`
+- `quote`
+- `pair`
 - `samples`
 - `spread_bps_p50`
-- `spread_bps_p95`
-- `top_book_depth_notional_p05`
-- `top_book_depth_notional_p50`
-- `quote_gap_sec_p95`
-- `ticker_gap_sec_p95`
-- `mark_index_deviation_bps_p95`
 - `mid_speed_bps_per_sec_p95`
 - `depth_stability_ratio`
 
-### [ ] `GET /api/v1/market-quality/history`
+หมายเหตุ: field ข้างบนคือ field ที่มีจริงใน table ปัจจุบัน ยังไม่มี `spread_bps_p95`, depth notional, quote gap, ticker gap หรือ mark-index deviation ใน `market_quality_metrics_1m`
+
+### [x] `GET /api/v1/market-quality/history`
 
 ดู historical market quality
 
@@ -715,18 +936,53 @@ Query params:
 - `to`
 - `limit`
 
-### [ ] `GET /api/v1/market-quality/alerts`
+Response fields:
+
+- `time`
+- `exchange`
+- `base`
+- `quote`
+- `pair`
+- `samples`
+- `spread_bps_p50`
+- `mid_speed_bps_per_sec_p95`
+- `depth_stability_ratio`
+
+### [x] `GET /api/v1/market-quality/alerts`
 
 หา pair ที่ตลาดไม่ดี
 
-ตัวอย่าง condition:
+Query params:
 
-- spread p95 สูง
-- depth ต่ำ
-- quote gap สูง
-- ticker gap สูง
-- mark-index deviation สูง
-- mid speed สูงผิดปกติ
+- `exchange`
+- `base`
+- `quote`
+- `min_samples`
+- `max_spread_bps_p50`
+- `max_mid_speed_bps_per_sec_p95`
+- `min_depth_stability_ratio`
+- `limit`
+
+ตัวอย่าง condition ที่ใช้ตอนนี้:
+
+- sample ต่ำ
+- spread p50 สูง
+- mid speed p95 สูงผิดปกติ
+- depth stability ratio ต่ำ
+
+Default thresholds:
+
+- `min_samples = 10`
+- `max_spread_bps_p50 = 10`
+- `max_mid_speed_bps_per_sec_p95 = 50`
+- `min_depth_stability_ratio = 0.10`
+
+Alert reasons:
+
+- `low_samples`
+- `wide_spread`
+- `fast_mid_price`
+- `unstable_depth`
 
 ## 9. Order Routing / Execution Flow API
 
@@ -909,7 +1165,12 @@ Response fields:
 Data source:
 
 - table: `pnl_events`
-- repo: `internal/repo/pnl_event.go`
+- repo: `internal/repo/pnl_repo.go`
+
+Environment note:
+
+- CRM PnL API ใช้ `DATABASE_URL` จาก `.env` / `.env.example` เพื่ออ่าน Postgres
+- ค่า `BITGET_CREDENTIAL_*` และ `BYBIT_CREDENTIAL_*` ใน `.env.example` ไม่ถูกใช้ใน endpoint ชุดนี้ เพราะ API เป็น read-only จาก `pnl_events`
 
 Components ปัจจุบัน:
 
@@ -919,7 +1180,7 @@ trading_fee
 trading_pnl
 ```
 
-### [ ] `GET /api/v1/pnl/events`
+### [x] `GET /api/v1/pnl/events`
 
 List PnL events
 
@@ -929,51 +1190,103 @@ Query params:
 - `base`
 - `quote`
 - `component`
+- `source_type`
+- `source_id`
 - `from`
 - `to`
+- `limit`
 
-### [ ] `GET /api/v1/pnl/summary`
+Response fields:
+
+- `event_time`
+- `exchange`
+- `base`
+- `quote`
+- `pair`
+- `component`
+- `amount`
+- `currency`
+- `source_type`
+- `source_id`
+- `created_at`
+
+### [x] `GET /api/v1/pnl/summary`
 
 สรุป PnL รวม
 
-ควร group ได้ตาม:
+Query params:
 
-- exchange
-- pair
-- component
-- day
-- allocation id ถ้ามีในอนาคต
+- `exchange`
+- `base`
+- `quote`
+- `component`
+- `source_type`
+- `source_id`
+- `from`
+- `to`
+- `limit`
 
 Response example:
 
 ```json
 {
-  "from": "2026-04-29T00:00:00Z",
-  "to": "2026-04-29T23:59:59Z",
-  "total": "12.35",
-  "by_component": {
-    "funding": "18.20",
-    "trading_fee": "-2.10",
-    "trading_pnl": "-3.75"
-  },
-  "by_exchange": {
-    "bybit": "6.50",
-    "bitget": "5.85"
-  }
+  "count": 18,
+  "total_amount": "12.35",
+  "funding_amount": "18.20",
+  "trading_fee_amount": "-2.10",
+  "trading_pnl_amount": "-3.75",
+  "by_component": [],
+  "by_exchange": [],
+  "by_pair": []
 }
 ```
 
-### [ ] `GET /api/v1/pnl/by-pair`
+### [x] `GET /api/v1/pnl/by-pair`
 
 ดู PnL ราย pair
 
-### [ ] `GET /api/v1/pnl/by-exchange`
+Group response fields:
+
+- `base`
+- `quote`
+- `pair`
+- `count`
+- `total_amount`
+- `funding_amount`
+- `trading_fee_amount`
+- `trading_pnl_amount`
+- `first_event_time`
+- `last_event_time`
+
+### [x] `GET /api/v1/pnl/by-exchange`
 
 ดู PnL ราย exchange
 
-### [ ] `GET /api/v1/pnl/by-component`
+Group response fields:
+
+- `exchange`
+- `count`
+- `total_amount`
+- `funding_amount`
+- `trading_fee_amount`
+- `trading_pnl_amount`
+- `first_event_time`
+- `last_event_time`
+
+### [x] `GET /api/v1/pnl/by-component`
 
 ดู PnL แยก funding / trading fee / trading pnl
+
+Group response fields:
+
+- `component`
+- `count`
+- `total_amount`
+- `funding_amount`
+- `trading_fee_amount`
+- `trading_pnl_amount`
+- `first_event_time`
+- `last_event_time`
 
 หมายเหตุด้านความถูกต้อง:
 
@@ -992,6 +1305,36 @@ Gap ปัจจุบัน:
 - portfolio sync wallet ทุก 1 นาที
 - แต่ยังไม่เห็น table persist wallet snapshots
 - ถ้าต้องการ historical equity curve ต้องเพิ่ม table
+
+Temporary CRM implementation:
+
+- `GET /api/v1/equity/latest`
+- `GET /api/v1/equity/live`
+- data source: direct Bybit/Bitget exchange API
+- config source: `backend/.env`
+- cache: `EQUITY_CACHE_TTL_SECONDS`
+- historical curve ยังทำไม่ได้ เพราะยังไม่ persist ลง DB
+
+Query params:
+
+- `exchange` เช่น `bybit`, `bitget` หรือ comma-separated
+- `quote` default `USDT`
+- `refresh=true` เพื่อ bypass cache แล้วดึง exchange สด
+
+Response fields:
+
+- `data[].exchange`
+- `data[].time`
+- `data[].account_equity`
+- `data[].wallet_balance`
+- `data[].available_balance`
+- `data[].unrealized_pnl`
+- `data[].initial_margin`
+- `data[].maintenance_margin`
+- `data[].coins`
+- `combined`
+- `errors`
+- `cache_ttl_seconds`
 
 ### Recommended table: `wallet_snapshots`
 
@@ -1015,7 +1358,7 @@ CREATE INDEX idx_wallet_snapshots_exchange_time
     ON wallet_snapshots (exchange, time DESC);
 ```
 
-### [ ] `GET /api/v1/equity/latest`
+### [x] `GET /api/v1/equity/latest`
 
 ดู equity ล่าสุดราย exchange และรวม
 
@@ -1041,6 +1384,10 @@ Response example:
   ]
 }
 ```
+
+### [x] `GET /api/v1/equity/live`
+
+Alias ของ `GET /api/v1/equity/latest` สำหรับช่วง temporary live pull จาก exchange API
 
 ### [ ] `GET /api/v1/equity/curve`
 
@@ -1190,12 +1537,19 @@ Subscribe message example:
 - [x] `GET /api/v1/allocations/active`
 - [x] `GET /api/v1/allocations/running`
 - [x] `GET /api/v1/allocations/cancelled/reasons`
-- [ ] `GET /api/v1/funding/latest`
-- [ ] `GET /api/v1/funding/history`
+- [x] `GET /api/v1/funding/latest`
+- [x] `GET /api/v1/funding/history`
+- [x] `GET /api/v1/funding/spread`
+- [x] `GET /api/v1/funding/top-spreads`
 - [ ] `GET /api/v1/open-interest/latest`
-- [ ] `GET /api/v1/market-quality/latest`
-- [ ] `GET /api/v1/pnl/events`
-- [ ] `GET /api/v1/pnl/summary`
+- [x] `GET /api/v1/market-quality/latest`
+- [x] `GET /api/v1/market-quality/history`
+- [x] `GET /api/v1/market-quality/alerts`
+- [x] `GET /api/v1/pnl/events`
+- [x] `GET /api/v1/pnl/summary`
+- [x] `GET /api/v1/pnl/by-pair`
+- [x] `GET /api/v1/pnl/by-exchange`
+- [x] `GET /api/v1/pnl/by-component`
 
 ### Phase 2: เพิ่ม persistence ที่ CRM ต้องใช้
 
@@ -1233,15 +1587,38 @@ Subscribe message example:
 Suggested Go structure:
 
 ```text
-cmd/crm-api/main.go
-internal/crmapi/handler
-internal/crmapi/service
-internal/crmapi/repo
-internal/crmapi/dto
-internal/crmapi/httpserver
+backend/
+  cmd/
+    api/
+      main.go
+  internal/
+    config/
+    database/
+    handler/
+    repo/
+    response/
+  docs/
 ```
 
-แนะนำใช้ repo เดิมจาก `internal/repo` เท่าที่ใช้ได้ และเพิ่ม query เฉพาะ CRM ใน package ใหม่
+โครงสร้างปัจจุบันใช้ `internal/response` แทนชื่อ `dto` เพื่อให้ชื่ออ่านง่ายขึ้นสำหรับ response JSON ของ CRM
+
+Current implemented files:
+
+- `backend/internal/handler/allocation_handler.go`
+- `backend/internal/handler/funding_handler.go`
+- `backend/internal/handler/market_quality_handler.go`
+- `backend/internal/handler/pnl_handler.go`
+- `backend/internal/handler/equity_handler.go`
+- `backend/internal/exchange/equity.go`
+- `backend/internal/repo/allocation_repo.go`
+- `backend/internal/repo/funding_repo.go`
+- `backend/internal/repo/market_quality_repo.go`
+- `backend/internal/repo/pnl_repo.go`
+- `backend/internal/repo/time_series.go`
+- `backend/internal/response/allocation.go`
+- `backend/internal/response/market_data.go`
+- `backend/internal/response/pnl.go`
+- `backend/internal/response/equity.go`
 
 สำคัญ:
 
@@ -1298,3 +1675,23 @@ internal/crmapi/httpserver
 
 - เพิ่ม `alerts`
 - ให้ trading engine / CRM job สร้าง alert จาก condition สำคัญ
+
+### Gap 5: Market quality table ยังมี metric ไม่ครบ
+
+ตอนนี้ `market_quality_metrics_1m` มี field ที่ CRM อ่านได้จริงคือ:
+
+- `samples`
+- `spread_bps_p50`
+- `mid_speed_bps_per_sec_p95`
+- `depth_stability_ratio`
+
+ผลกระทบ:
+
+- ยังทำ alert จาก `spread_bps_p95`, top-book depth, quote gap, ticker gap หรือ mark-index deviation ไม่ได้โดยตรง
+- Market quality alert ตอนนี้จึงเป็น threshold แบบง่ายจาก field ที่มีจริงก่อน
+
+วิธีแก้:
+
+- เพิ่ม column หรือ table สำหรับ metric ที่ต้องใช้เพิ่ม
+- persist `spread_bps_p95`, `top_book_depth_notional`, `quote_gap_sec`, `ticker_gap_sec`, `mark_index_deviation_bps`
+- หลังมี field แล้วค่อยขยาย `GET /api/v1/market-quality/alerts` ให้ใช้ condition ครบขึ้น
