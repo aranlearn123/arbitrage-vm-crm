@@ -1,10 +1,111 @@
 basePath: /api/v1
 definitions:
+  response.Allocation:
+    properties:
+      base:
+        type: string
+      budget_usd:
+        type: string
+      created_at:
+        type: string
+      direction:
+        type: string
+      id:
+        type: integer
+      note:
+        type: string
+      pair:
+        type: string
+      quote:
+        type: string
+      rank:
+        type: integer
+      role:
+        type: string
+      score:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+      worker_pid:
+        type: string
+    type: object
+  response.AllocationList:
+    properties:
+      count:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.Allocation'
+        type: array
+      limit:
+        type: integer
+    type: object
+  response.AllocationSummary:
+    properties:
+      active:
+        type: integer
+      active_budget_usd:
+        type: string
+      by_status:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+      cancelled:
+        type: integer
+      cancelled_by_reason:
+        items:
+          $ref: '#/definitions/response.CancelledReasonCount'
+        type: array
+      total:
+        type: integer
+    type: object
+  response.CancelledReasonCount:
+    properties:
+      count:
+        type: integer
+      reason:
+        type: string
+    type: object
+  response.CancelledReasonList:
+    properties:
+      count:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.CancelledReasonCount'
+        type: array
+      limit:
+        type: integer
+    type: object
+  response.Error:
+    properties:
+      error:
+        type: string
+    type: object
   response.Health:
     properties:
+      checks:
+        $ref: '#/definitions/response.HealthChecks'
       status:
         type: string
       time:
+        type: string
+    type: object
+  response.HealthChecks:
+    properties:
+      api:
+        $ref: '#/definitions/response.HealthComponent'
+      database:
+        $ref: '#/definitions/response.HealthComponent'
+    type: object
+  response.HealthComponent:
+    properties:
+      error:
+        type: string
+      status:
         type: string
     type: object
 info:
@@ -13,14 +114,104 @@ info:
   title: Arbitrage VM CRM API
   version: 0.1.0
 paths:
-  /health:
+  /allocations/active:
     get:
-      description: Check API service status
+      description: List allocations in created, running, failed, or paused state
+      parameters:
+      - default: 100
+        description: Maximum rows to return
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/response.AllocationList'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Active allocations
+      tags:
+      - Allocations
+  /allocations/cancelled/reasons:
+    get:
+      description: Count cancelled allocations grouped by note/reason
+      parameters:
+      - default: 100
+        description: Maximum rows to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CancelledReasonList'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Cancelled allocation reasons
+      tags:
+      - Allocations
+  /allocations/running:
+    get:
+      description: List allocations currently in running state
+      parameters:
+      - default: 100
+        description: Maximum rows to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.AllocationList'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Running allocations
+      tags:
+      - Allocations
+  /allocations/summary:
+    get:
+      description: Count allocations by status and show active budget
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.AllocationSummary'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Allocation summary
+      tags:
+      - Allocations
+  /health:
+    get:
+      description: Check API service and database status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Health'
+        "503":
+          description: Service Unavailable
           schema:
             $ref: '#/definitions/response.Health'
       summary: Health check

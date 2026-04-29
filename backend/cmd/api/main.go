@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
 	"strings"
 
 	"arbitrage-vm-crm-backend/internal/config"
+	"arbitrage-vm-crm-backend/internal/database"
 	"arbitrage-vm-crm-backend/internal/handler"
+	"arbitrage-vm-crm-backend/internal/repo"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -24,6 +27,18 @@ import (
 func main() {
 	cfg := config.Load()
 
+	db, err := database.Open(context.Background(), database.Config{
+		DatabaseURL: cfg.DatabaseURL,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := database.Close(db); err != nil {
+			log.Printf("failed to close database: %v", err)
+		}
+	}()
+
 	app := fiber.New(fiber.Config{
 		AppName: "arbitrage-vm-crm-backend",
 	})
@@ -36,10 +51,16 @@ func main() {
 		AllowMethods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
 	}))
 
-	healthHandler := handler.NewHealthHandler()
+	healthHandler := handler.NewHealthHandler(db)
+	allocationRepo := repo.NewAllocationRepo(db)
+	allocationHandler := handler.NewAllocationHandler(allocationRepo)
 
 	api := app.Group("/api/v1")
 	api.Get("/health", healthHandler.Check)
+	api.Get("/allocations/summary", allocationHandler.Summary)
+	api.Get("/allocations/active", allocationHandler.Active)
+	api.Get("/allocations/running", allocationHandler.Running)
+	api.Get("/allocations/cancelled/reasons", allocationHandler.CancelledReasons)
 
 	log.Printf("starting api server on :%s", cfg.AppPort)
 	app.Get("/swagger/*", swagger.WrapHandler)

@@ -15,9 +15,140 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/allocations/active": {
+            "get": {
+                "description": "List allocations in created, running, failed, or paused state",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Allocations"
+                ],
+                "summary": "Active allocations",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum rows to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.AllocationList"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/allocations/cancelled/reasons": {
+            "get": {
+                "description": "Count cancelled allocations grouped by note/reason",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Allocations"
+                ],
+                "summary": "Cancelled allocation reasons",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum rows to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.CancelledReasonList"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/allocations/running": {
+            "get": {
+                "description": "List allocations currently in running state",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Allocations"
+                ],
+                "summary": "Running allocations",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum rows to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.AllocationList"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/allocations/summary": {
+            "get": {
+                "description": "Count allocations by status and show active budget",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Allocations"
+                ],
+                "summary": "Allocation summary",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.AllocationSummary"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
-                "description": "Check API service status",
+                "description": "Check API service and database status",
                 "produces": [
                     "application/json"
                 ],
@@ -31,19 +162,180 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/response.Health"
                         }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/response.Health"
+                        }
                     }
                 }
             }
         }
     },
     "definitions": {
+        "response.Allocation": {
+            "type": "object",
+            "properties": {
+                "base": {
+                    "type": "string"
+                },
+                "budget_usd": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "direction": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "pair": {
+                    "type": "string"
+                },
+                "quote": {
+                    "type": "string"
+                },
+                "rank": {
+                    "type": "integer"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "worker_pid": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.AllocationList": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.Allocation"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.AllocationSummary": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "integer"
+                },
+                "active_budget_usd": {
+                    "type": "string"
+                },
+                "by_status": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "cancelled": {
+                    "type": "integer"
+                },
+                "cancelled_by_reason": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.CancelledReasonCount"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.CancelledReasonCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.CancelledReasonList": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.CancelledReasonCount"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.Error": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
         "response.Health": {
             "type": "object",
             "properties": {
+                "checks": {
+                    "$ref": "#/definitions/response.HealthChecks"
+                },
                 "status": {
                     "type": "string"
                 },
                 "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.HealthChecks": {
+            "type": "object",
+            "properties": {
+                "api": {
+                    "$ref": "#/definitions/response.HealthComponent"
+                },
+                "database": {
+                    "$ref": "#/definitions/response.HealthComponent"
+                }
+            }
+        },
+        "response.HealthComponent": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 }
             }
