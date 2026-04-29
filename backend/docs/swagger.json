@@ -8,6 +8,65 @@
     },
     "basePath": "/api/v1",
     "paths": {
+        "/allocations": {
+            "get": {
+                "description": "List allocations with optional status, base, quote, and role filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Allocations"
+                ],
+                "summary": "List allocations",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by status. Supports comma-separated values.",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by base asset. Supports comma-separated values.",
+                        "name": "base",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by quote asset. Supports comma-separated values.",
+                        "name": "quote",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by crowding role. Supports comma-separated values.",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum rows to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.AllocationList"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/allocations/active": {
             "get": {
                 "description": "List allocations in created, running, failed, or paused state",
@@ -19,6 +78,65 @@
                 ],
                 "summary": "Active allocations",
                 "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum rows to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.AllocationList"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/allocations/cancelled": {
+            "get": {
+                "description": "List cancelled allocations with optional base, quote, role, and reason filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Allocations"
+                ],
+                "summary": "Cancelled allocations",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by base asset. Supports comma-separated values.",
+                        "name": "base",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by quote asset. Supports comma-separated values.",
+                        "name": "quote",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by crowding role. Supports comma-separated values.",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by normalized cancel reason. Supports comma-separated values.",
+                        "name": "reason",
+                        "in": "query"
+                    },
                     {
                         "type": "integer",
                         "default": 100,
@@ -139,6 +257,100 @@
                 }
             }
         },
+        "/allocations/{id}": {
+            "get": {
+                "description": "Get one allocation by id",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Allocations"
+                ],
+                "summary": "Allocation detail",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Allocation ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.AllocationDetail"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/allocations/{id}/timeline": {
+            "get": {
+                "description": "Build allocation timeline from allocation, scaling, recovery, routing, and order progress tables",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Allocations"
+                ],
+                "summary": "Allocation timeline",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Allocation ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.AllocationTimeline"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "Check API service and database status",
@@ -214,6 +426,14 @@
                 }
             }
         },
+        "response.AllocationDetail": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.Allocation"
+                }
+            }
+        },
         "response.AllocationList": {
             "type": "object",
             "properties": {
@@ -258,6 +478,52 @@
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "response.AllocationTimeline": {
+            "type": "object",
+            "properties": {
+                "allocation_id": {
+                    "type": "integer"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.AllocationTimelineEvent"
+                    }
+                }
+            }
+        },
+        "response.AllocationTimelineEvent": {
+            "type": "object",
+            "properties": {
+                "event": {
+                    "type": "string"
+                },
+                "payload": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "reference_id": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "stage": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
                 }
             }
         },

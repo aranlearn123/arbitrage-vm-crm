@@ -37,6 +37,27 @@ type AllocationList struct {
 	Limit int          `json:"limit"`
 }
 
+type AllocationDetail struct {
+	Data Allocation `json:"data"`
+}
+
+type AllocationTimelineEvent struct {
+	Time        string `json:"time"`
+	Stage       string `json:"stage"`
+	Event       string `json:"event"`
+	Status      string `json:"status,omitempty"`
+	Reason      string `json:"reason,omitempty"`
+	Source      string `json:"source"`
+	ReferenceID string `json:"reference_id"`
+	Payload     string `json:"payload,omitempty"`
+}
+
+type AllocationTimeline struct {
+	AllocationID int64                     `json:"allocation_id"`
+	Data         []AllocationTimelineEvent `json:"data"`
+	Count        int                       `json:"count"`
+}
+
 type CancelledReasonList struct {
 	Data  []CancelledReasonCount `json:"data"`
 	Count int                    `json:"count"`

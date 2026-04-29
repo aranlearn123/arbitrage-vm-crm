@@ -31,6 +31,11 @@ definitions:
       worker_pid:
         type: string
     type: object
+  response.AllocationDetail:
+    properties:
+      data:
+        $ref: '#/definitions/response.Allocation'
+    type: object
   response.AllocationList:
     properties:
       count:
@@ -61,6 +66,36 @@ definitions:
         type: array
       total:
         type: integer
+    type: object
+  response.AllocationTimeline:
+    properties:
+      allocation_id:
+        type: integer
+      count:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.AllocationTimelineEvent'
+        type: array
+    type: object
+  response.AllocationTimelineEvent:
+    properties:
+      event:
+        type: string
+      payload:
+        type: string
+      reason:
+        type: string
+      reference_id:
+        type: string
+      source:
+        type: string
+      stage:
+        type: string
+      status:
+        type: string
+      time:
+        type: string
     type: object
   response.CancelledReasonCount:
     properties:
@@ -114,6 +149,108 @@ info:
   title: Arbitrage VM CRM API
   version: 0.1.0
 paths:
+  /allocations:
+    get:
+      description: List allocations with optional status, base, quote, and role filters
+      parameters:
+      - description: Filter by status. Supports comma-separated values.
+        in: query
+        name: status
+        type: string
+      - description: Filter by base asset. Supports comma-separated values.
+        in: query
+        name: base
+        type: string
+      - description: Filter by quote asset. Supports comma-separated values.
+        in: query
+        name: quote
+        type: string
+      - description: Filter by crowding role. Supports comma-separated values.
+        in: query
+        name: role
+        type: string
+      - default: 100
+        description: Maximum rows to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.AllocationList'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: List allocations
+      tags:
+      - Allocations
+  /allocations/{id}:
+    get:
+      description: Get one allocation by id
+      parameters:
+      - description: Allocation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.AllocationDetail'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Allocation detail
+      tags:
+      - Allocations
+  /allocations/{id}/timeline:
+    get:
+      description: Build allocation timeline from allocation, scaling, recovery, routing,
+        and order progress tables
+      parameters:
+      - description: Allocation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.AllocationTimeline'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Allocation timeline
+      tags:
+      - Allocations
   /allocations/active:
     get:
       description: List allocations in created, running, failed, or paused state
@@ -135,6 +272,47 @@ paths:
           schema:
             $ref: '#/definitions/response.Error'
       summary: Active allocations
+      tags:
+      - Allocations
+  /allocations/cancelled:
+    get:
+      description: List cancelled allocations with optional base, quote, role, and
+        reason filters
+      parameters:
+      - description: Filter by base asset. Supports comma-separated values.
+        in: query
+        name: base
+        type: string
+      - description: Filter by quote asset. Supports comma-separated values.
+        in: query
+        name: quote
+        type: string
+      - description: Filter by crowding role. Supports comma-separated values.
+        in: query
+        name: role
+        type: string
+      - description: Filter by normalized cancel reason. Supports comma-separated
+          values.
+        in: query
+        name: reason
+        type: string
+      - default: 100
+        description: Maximum rows to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.AllocationList'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Cancelled allocations
       tags:
       - Allocations
   /allocations/cancelled/reasons:

@@ -57,10 +57,14 @@ func main() {
 
 	api := app.Group("/api/v1")
 	api.Get("/health", healthHandler.Check)
+	api.Get("/allocations", allocationHandler.List)
 	api.Get("/allocations/summary", allocationHandler.Summary)
 	api.Get("/allocations/active", allocationHandler.Active)
 	api.Get("/allocations/running", allocationHandler.Running)
 	api.Get("/allocations/cancelled/reasons", allocationHandler.CancelledReasons)
+	api.Get("/allocations/cancelled", allocationHandler.Cancelled)
+	api.Get("/allocations/:id/timeline", allocationHandler.Timeline)
+	api.Get("/allocations/:id", allocationHandler.Detail)
 
 	log.Printf("starting api server on :%s", cfg.AppPort)
 	app.Get("/swagger/*", swagger.WrapHandler)
