@@ -148,7 +148,7 @@
       }
 
       .kpi-grid {
-        grid-template-columns: repeat(4, minmax(180px, 1fr));
+        grid-template-columns: repeat(5, minmax(156px, 1fr));
       }
 
       .app-grid {
@@ -174,6 +174,49 @@
         border-radius: 999px;
       }
 
+      .heat-dial {
+        position: relative;
+        display: grid;
+        height: 132px;
+        width: 132px;
+        place-items: center;
+        border-radius: 999px;
+        background: conic-gradient(var(--crm-good) 0 50%, var(--crm-warn) 50% 70%, var(--crm-bad) 70% 100%);
+      }
+
+      .heat-dial::after {
+        position: absolute;
+        inset: 12px;
+        border-radius: inherit;
+        background: var(--crm-panel);
+        content: "";
+      }
+
+      .heat-value {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+      }
+
+      .heat-meter {
+        position: relative;
+        height: 12px;
+        overflow: hidden;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: linear-gradient(90deg, var(--crm-good) 0 50%, var(--crm-warn) 50% 70%, var(--crm-bad) 70% 100%);
+      }
+
+      .heat-marker {
+        position: absolute;
+        top: -4px;
+        height: 20px;
+        width: 3px;
+        border-radius: 999px;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.14);
+      }
+
       .allocation-row {
         display: grid;
         grid-template-columns: 82px 110px 118px 112px minmax(260px, 1fr) 92px;
@@ -182,6 +225,17 @@
       }
 
       .allocation-row:hover:not(.allocation-head) {
+        background: rgba(255, 255, 255, 0.025);
+      }
+
+      .margin-leg-row {
+        display: grid;
+        grid-template-columns: 96px 94px 96px 82px 102px 118px 94px;
+        min-width: 780px;
+        align-items: center;
+      }
+
+      .margin-leg-row:hover:not(.margin-leg-head) {
         background: rgba(255, 255, 255, 0.025);
       }
 
@@ -208,7 +262,6 @@
       .alert-warning {
         border-color: rgba(240, 180, 76, 0.38);
         background: rgba(240, 180, 76, 0.10);
-      }
       }
 
       @media (max-width: 1180px) {
@@ -259,6 +312,7 @@
         <nav class="mt-7 space-y-1">
           <a class="nav-item active" href="#overview"><i data-lucide="layout-dashboard" class="icon"></i>Overview</a>
           <a class="nav-item" href="#allocations"><i data-lucide="workflow" class="icon"></i>Allocations</a>
+          <a class="nav-item" href="#margin"><i data-lucide="gauge" class="icon"></i>Margin</a>
           <a class="nav-item" href="#equity"><i data-lucide="line-chart" class="icon"></i>Equity & PnL</a>
           <a class="nav-item" href="#market"><i data-lucide="radio-tower" class="icon"></i>Market Quality</a>
           <a class="nav-item" href="#trades"><i data-lucide="receipt-text" class="icon"></i>Trade Log</a>
@@ -326,6 +380,23 @@
 
           <article class="hero-card p-4">
             <div class="flex items-center justify-between">
+              <span class="text-[13px] font-semibold text-muted">Margin Used</span>
+              <i data-lucide="gauge" class="icon text-warn"></i>
+            </div>
+            <div class="mt-3 flex items-end justify-between gap-3">
+              <div class="text-[26px] font-bold leading-8 text-warn">68%</div>
+              <span class="hero-chip chip-warn">watch</span>
+            </div>
+            <div class="heat-meter mt-3" aria-label="Portfolio margin heat 68 percent">
+              <span class="heat-marker" style="left: 68%"></span>
+            </div>
+            <div class="mt-2 flex justify-between text-[11px] font-bold text-muted">
+              <span>&lt;50</span><span>50-70</span><span>&gt;70</span>
+            </div>
+          </article>
+
+          <article class="hero-card p-4">
+            <div class="flex items-center justify-between">
               <span class="text-[13px] font-semibold text-muted">Cancelled Today</span>
               <i data-lucide="octagon-x" class="icon text-bad"></i>
             </div>
@@ -369,6 +440,96 @@
                   <span class="text-[13px] font-semibold">Cancelled</span>
                   <div class="bar-track"><div class="bar-fill bg-bad" style="width: 100%"></div></div>
                   <span class="text-right text-[13px] font-bold">35</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="margin" class="hero-card overflow-hidden">
+              <div class="mobile-wrap flex items-center justify-between gap-3 border-b border-line px-4 py-3">
+                <div>
+                  <h2 class="text-[16px] font-bold">Margin Use by Leg</h2>
+                  <p class="mt-1 text-[12px] font-medium text-muted">Funding leg, hedge leg, exchange margin, and heat state</p>
+                </div>
+                <div class="mobile-wrap flex gap-2">
+                  <button class="hero-button" title="Choose pair"><i data-lucide="list-filter" class="icon"></i>All pairs</button>
+                  <button class="hero-button" title="Refresh margin"><i data-lucide="refresh-cw" class="icon"></i>Live</button>
+                </div>
+              </div>
+
+              <div class="grid gap-3 p-4 lg:grid-cols-3">
+                <div class="soft-panel rounded-[8px] border border-line p-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[12px] font-bold uppercase text-muted">Portfolio</span>
+                    <span class="hero-chip chip-warn">watch</span>
+                  </div>
+                  <div class="mt-3 flex items-end justify-between gap-3">
+                    <div>
+                      <div class="text-[24px] font-bold text-warn">68%</div>
+                      <div class="text-[12px] font-semibold text-muted">$3,844 / $5,650</div>
+                    </div>
+                    <i data-lucide="flame" class="h-7 w-7 text-warn"></i>
+                  </div>
+                  <div class="heat-meter mt-3"><span class="heat-marker" style="left: 68%"></span></div>
+                </div>
+                <div class="soft-panel rounded-[8px] border border-line p-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[12px] font-bold uppercase text-muted">Bybit</span>
+                    <span class="hero-chip chip-bad">hot</span>
+                  </div>
+                  <div class="mt-3 text-[24px] font-bold text-bad">72%</div>
+                  <div class="mt-1 text-[12px] font-semibold text-muted">Funding $1,620 / Hedge $946</div>
+                  <div class="mt-3 bar-track"><div class="bar-fill bg-bad" style="width: 72%"></div></div>
+                </div>
+                <div class="soft-panel rounded-[8px] border border-line p-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[12px] font-bold uppercase text-muted">Bitget</span>
+                    <span class="hero-chip chip-warn">watch</span>
+                  </div>
+                  <div class="mt-3 text-[24px] font-bold text-warn">61%</div>
+                  <div class="mt-1 text-[12px] font-semibold text-muted">Funding $840 / Hedge $1,438</div>
+                  <div class="mt-3 bar-track"><div class="bar-fill bg-warn" style="width: 61%"></div></div>
+                </div>
+              </div>
+
+              <div class="overflow-x-auto border-t border-line">
+                <div class="margin-leg-row margin-leg-head bg-[#121720] px-4 py-2.5 text-[11px] font-bold uppercase text-muted">
+                  <div>Leg</div><div>Exchange</div><div>Pair</div><div>Side</div><div>Notional</div><div>Margin Used</div><div>Heat</div>
+                </div>
+                <div class="margin-leg-row border-t border-line px-4 py-3 text-[13px]">
+                  <div><span class="hero-chip chip-neutral">funding</span></div>
+                  <div class="font-bold">Bybit</div>
+                  <div>BTCUSDT</div>
+                  <div><span class="hero-chip chip-bad">short</span></div>
+                  <div class="font-semibold">$3,240</div>
+                  <div><span class="font-bold text-bad">$1,620</span><span class="ml-1 text-muted">72%</span></div>
+                  <div class="bar-track h-[8px]"><div class="bar-fill bg-bad" style="width: 72%"></div></div>
+                </div>
+                <div class="margin-leg-row border-t border-line px-4 py-3 text-[13px]">
+                  <div><span class="hero-chip chip-neutral">hedge</span></div>
+                  <div class="font-bold">Bitget</div>
+                  <div>BTCUSDT</div>
+                  <div><span class="hero-chip chip-good">long</span></div>
+                  <div class="font-semibold">$3,198</div>
+                  <div><span class="font-bold text-warn">$1,438</span><span class="ml-1 text-muted">64%</span></div>
+                  <div class="bar-track h-[8px]"><div class="bar-fill bg-warn" style="width: 64%"></div></div>
+                </div>
+                <div class="margin-leg-row border-t border-line px-4 py-3 text-[13px]">
+                  <div><span class="hero-chip chip-neutral">funding</span></div>
+                  <div class="font-bold">Bitget</div>
+                  <div>ETHUSDT</div>
+                  <div><span class="hero-chip chip-good">long</span></div>
+                  <div class="font-semibold">$2,100</div>
+                  <div><span class="font-bold text-good">$840</span><span class="ml-1 text-muted">42%</span></div>
+                  <div class="bar-track h-[8px]"><div class="bar-fill bg-good" style="width: 42%"></div></div>
+                </div>
+                <div class="margin-leg-row border-t border-line px-4 py-3 text-[13px]">
+                  <div><span class="hero-chip chip-neutral">hedge</span></div>
+                  <div class="font-bold">Bybit</div>
+                  <div>ETHUSDT</div>
+                  <div><span class="hero-chip chip-bad">short</span></div>
+                  <div class="font-semibold">$2,086</div>
+                  <div><span class="font-bold text-warn">$946</span><span class="ml-1 text-muted">51%</span></div>
+                  <div class="bar-track h-[8px]"><div class="bar-fill bg-warn" style="width: 51%"></div></div>
                 </div>
               </div>
             </div>
@@ -454,6 +615,45 @@
           </section>
 
           <aside class="min-w-0 space-y-4">
+            <section class="hero-card p-4">
+              <div class="flex items-center justify-between">
+                <h2 class="text-[16px] font-bold">Port Heat Meter</h2>
+                <span class="hero-chip chip-warn">68% margin</span>
+              </div>
+              <div class="mt-4 flex items-center gap-4">
+                <div class="heat-dial" aria-label="Portfolio heat 68 percent">
+                  <div class="heat-value">
+                    <div class="text-[28px] font-bold leading-8 text-warn">68%</div>
+                    <div class="text-[11px] font-bold uppercase text-muted">watch</div>
+                  </div>
+                </div>
+                <div class="min-w-0 flex-1 space-y-3">
+                  <div>
+                    <div class="flex justify-between text-[12px] font-bold"><span>Safe</span><span class="text-good">&lt;50%</span></div>
+                    <div class="mt-1 bar-track h-[7px]"><div class="bar-fill bg-good" style="width: 50%"></div></div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[12px] font-bold"><span>Watch</span><span class="text-warn">50-70%</span></div>
+                    <div class="mt-1 bar-track h-[7px]"><div class="bar-fill bg-warn" style="width: 70%"></div></div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[12px] font-bold"><span>Danger</span><span class="text-bad">&gt;70%</span></div>
+                    <div class="mt-1 bar-track h-[7px]"><div class="bar-fill bg-bad" style="width: 100%"></div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-4 grid grid-cols-2 gap-3">
+                <div class="soft-panel rounded-[8px] border border-line p-3">
+                  <div class="text-[12px] font-bold text-muted">Free Margin</div>
+                  <div class="mt-1 text-[20px] font-bold">$1,806</div>
+                </div>
+                <div class="soft-panel rounded-[8px] border border-line p-3">
+                  <div class="text-[12px] font-bold text-muted">Liquidation Buffer</div>
+                  <div class="mt-1 text-[20px] font-bold text-warn">1.32x</div>
+                </div>
+              </div>
+            </section>
+
             <section class="hero-card p-4">
               <div class="flex items-center justify-between">
                 <h2 class="text-[16px] font-bold">Cancel Reasons</h2>
