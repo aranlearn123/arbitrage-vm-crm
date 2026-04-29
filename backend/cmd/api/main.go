@@ -4,9 +4,11 @@ import (
 	"context"
 	"log"
 	"strings"
+	"time"
 
 	"arbitrage-vm-crm-backend/internal/config"
 	"arbitrage-vm-crm-backend/internal/database"
+	"arbitrage-vm-crm-backend/internal/exchange"
 	"arbitrage-vm-crm-backend/internal/handler"
 	"arbitrage-vm-crm-backend/internal/repo"
 
@@ -52,15 +54,32 @@ func main() {
 	}))
 
 	healthHandler := handler.NewHealthHandler(db)
+	systemRepo := repo.NewSystemRepo(db)
+	systemHandler := handler.NewSystemHandler(db, systemRepo, cfg)
 	allocationRepo := repo.NewAllocationRepo(db)
 	allocationHandler := handler.NewAllocationHandler(allocationRepo)
 	fundingRepo := repo.NewFundingRepo(db)
 	fundingHandler := handler.NewFundingHandler(fundingRepo)
 	marketQualityRepo := repo.NewMarketQualityRepo(db)
 	marketQualityHandler := handler.NewMarketQualityHandler(marketQualityRepo)
+	pnlRepo := repo.NewPnLRepo(db)
+	pnlHandler := handler.NewPnLHandler(pnlRepo)
+	equityService := exchange.NewEquityService(exchange.Config{
+		CacheTTL:         time.Duration(cfg.EquityCacheTTLSeconds) * time.Second,
+		BybitDemo:        cfg.BybitDemo,
+		BybitAPIKey:      cfg.BybitCredential.APIKey,
+		BybitAPISecret:   cfg.BybitCredential.APISecret,
+		BitgetDemo:       cfg.BitgetDemo,
+		BitgetAPIKey:     cfg.BitgetCredential.APIKey,
+		BitgetAPISecret:  cfg.BitgetCredential.APISecret,
+		BitgetPassphrase: cfg.BitgetCredential.Passphrase,
+	})
+	equityHandler := handler.NewEquityHandler(equityService)
 
 	api := app.Group("/api/v1")
 	api.Get("/health", healthHandler.Check)
+	api.Get("/system/status", systemHandler.Status)
+	api.Get("/system/exchanges", systemHandler.Exchanges)
 	api.Get("/allocations", allocationHandler.List)
 	api.Get("/allocations/summary", allocationHandler.Summary)
 	api.Get("/allocations/active", allocationHandler.Active)
@@ -76,6 +95,13 @@ func main() {
 	api.Get("/market-quality/latest", marketQualityHandler.Latest)
 	api.Get("/market-quality/history", marketQualityHandler.History)
 	api.Get("/market-quality/alerts", marketQualityHandler.Alerts)
+	api.Get("/pnl/events", pnlHandler.Events)
+	api.Get("/pnl/summary", pnlHandler.Summary)
+	api.Get("/pnl/by-pair", pnlHandler.ByPair)
+	api.Get("/pnl/by-exchange", pnlHandler.ByExchange)
+	api.Get("/pnl/by-component", pnlHandler.ByComponent)
+	api.Get("/equity/latest", equityHandler.Latest)
+	api.Get("/equity/live", equityHandler.Latest)
 
 	log.Printf("starting api server on :%s", cfg.AppPort)
 	app.Get("/swagger/*", swagger.WrapHandler)

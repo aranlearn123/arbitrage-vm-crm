@@ -358,6 +358,112 @@ const docTemplate = `{
                 }
             }
         },
+        "/equity/latest": {
+            "get": {
+                "description": "Temporarily fetch latest wallet/equity directly from exchange APIs with a short backend cache",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Equity"
+                ],
+                "summary": "Latest equity from exchange API",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by exchange: bybit, bitget. Supports comma-separated values.",
+                        "name": "exchange",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "USDT",
+                        "description": "Margin quote coins. Supports comma-separated values.",
+                        "name": "quote",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Bypass backend cache and pull from exchange API",
+                        "name": "refresh",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.EquityLatest"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/response.EquityLatest"
+                        }
+                    }
+                }
+            }
+        },
+        "/equity/live": {
+            "get": {
+                "description": "Temporarily fetch latest wallet/equity directly from exchange APIs with a short backend cache",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Equity"
+                ],
+                "summary": "Latest equity from exchange API",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by exchange: bybit, bitget. Supports comma-separated values.",
+                        "name": "exchange",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "USDT",
+                        "description": "Margin quote coins. Supports comma-separated values.",
+                        "name": "quote",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Bypass backend cache and pull from exchange API",
+                        "name": "refresh",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.EquityLatest"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/response.EquityLatest"
+                        }
+                    }
+                }
+            }
+        },
         "/funding/history": {
             "get": {
                 "description": "List historical funding rates",
@@ -838,6 +944,503 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/pnl/by-component": {
+            "get": {
+                "description": "Summarize PnL grouped by funding, trading_fee, and trading_pnl",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PnL"
+                ],
+                "summary": "PnL by component",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by exchange. Supports comma-separated values.",
+                        "name": "exchange",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by base asset. Supports comma-separated values.",
+                        "name": "base",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by quote asset. Supports comma-separated values.",
+                        "name": "quote",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by component: funding, trading_fee, trading_pnl. Supports comma-separated values.",
+                        "name": "component",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by source type. Supports comma-separated values.",
+                        "name": "source_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by source id. Supports comma-separated values.",
+                        "name": "source_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Inclusive start time. Supports RFC3339 or YYYY-MM-DD.",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Exclusive end time. Supports RFC3339 or YYYY-MM-DD.",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum rows to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.PnLGroupList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/pnl/by-exchange": {
+            "get": {
+                "description": "Summarize PnL grouped by exchange",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PnL"
+                ],
+                "summary": "PnL by exchange",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by exchange. Supports comma-separated values.",
+                        "name": "exchange",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by base asset. Supports comma-separated values.",
+                        "name": "base",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by quote asset. Supports comma-separated values.",
+                        "name": "quote",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by component: funding, trading_fee, trading_pnl. Supports comma-separated values.",
+                        "name": "component",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by source type. Supports comma-separated values.",
+                        "name": "source_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by source id. Supports comma-separated values.",
+                        "name": "source_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Inclusive start time. Supports RFC3339 or YYYY-MM-DD.",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Exclusive end time. Supports RFC3339 or YYYY-MM-DD.",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum rows to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.PnLGroupList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/pnl/by-pair": {
+            "get": {
+                "description": "Summarize PnL grouped by base and quote",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PnL"
+                ],
+                "summary": "PnL by pair",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by exchange. Supports comma-separated values.",
+                        "name": "exchange",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by base asset. Supports comma-separated values.",
+                        "name": "base",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by quote asset. Supports comma-separated values.",
+                        "name": "quote",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by component: funding, trading_fee, trading_pnl. Supports comma-separated values.",
+                        "name": "component",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by source type. Supports comma-separated values.",
+                        "name": "source_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by source id. Supports comma-separated values.",
+                        "name": "source_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Inclusive start time. Supports RFC3339 or YYYY-MM-DD.",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Exclusive end time. Supports RFC3339 or YYYY-MM-DD.",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum rows to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.PnLGroupList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/pnl/events": {
+            "get": {
+                "description": "List persisted PnL ledger events",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PnL"
+                ],
+                "summary": "PnL events",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by exchange. Supports comma-separated values.",
+                        "name": "exchange",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by base asset. Supports comma-separated values.",
+                        "name": "base",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by quote asset. Supports comma-separated values.",
+                        "name": "quote",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by component: funding, trading_fee, trading_pnl. Supports comma-separated values.",
+                        "name": "component",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by source type. Supports comma-separated values.",
+                        "name": "source_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by source id. Supports comma-separated values.",
+                        "name": "source_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Inclusive start time. Supports RFC3339 or YYYY-MM-DD.",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Exclusive end time. Supports RFC3339 or YYYY-MM-DD.",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum rows to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.PnLEventList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/pnl/summary": {
+            "get": {
+                "description": "Summarize PnL totals and grouped breakdowns",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PnL"
+                ],
+                "summary": "PnL summary",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by exchange. Supports comma-separated values.",
+                        "name": "exchange",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by base asset. Supports comma-separated values.",
+                        "name": "base",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by quote asset. Supports comma-separated values.",
+                        "name": "quote",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by component: funding, trading_fee, trading_pnl. Supports comma-separated values.",
+                        "name": "component",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by source type. Supports comma-separated values.",
+                        "name": "source_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by source id. Supports comma-separated values.",
+                        "name": "source_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Inclusive start time. Supports RFC3339 or YYYY-MM-DD.",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Exclusive end time. Supports RFC3339 or YYYY-MM-DD.",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum grouped rows per breakdown",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.PnLSummary"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/system/exchanges": {
+            "get": {
+                "description": "List supported exchanges and latest market-data timestamps",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "System exchanges",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.SystemExchangeList"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/system/status": {
+            "get": {
+                "description": "Get API, database, TimescaleDB, market-data, allocation, and exchange status",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "System status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.SystemStatus"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/response.SystemStatus"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1014,6 +1617,136 @@ const docTemplate = `{
                 },
                 "limit": {
                     "type": "integer"
+                }
+            }
+        },
+        "response.CombinedEquity": {
+            "type": "object",
+            "properties": {
+                "account_equity": {
+                    "type": "string"
+                },
+                "available_balance": {
+                    "type": "string"
+                },
+                "initial_margin": {
+                    "type": "string"
+                },
+                "maintenance_margin": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "unrealized_pnl": {
+                    "type": "string"
+                },
+                "wallet_balance": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.EquityCoin": {
+            "type": "object",
+            "properties": {
+                "available_balance": {
+                    "type": "string"
+                },
+                "coin": {
+                    "type": "string"
+                },
+                "equity": {
+                    "type": "string"
+                },
+                "locked": {
+                    "type": "string"
+                },
+                "unrealized_pnl": {
+                    "type": "string"
+                },
+                "usd_value": {
+                    "type": "string"
+                },
+                "wallet_balance": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.EquityFetchError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "exchange": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.EquityLatest": {
+            "type": "object",
+            "properties": {
+                "cache_ttl_seconds": {
+                    "type": "integer"
+                },
+                "combined": {
+                    "$ref": "#/definitions/response.CombinedEquity"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.EquitySnapshot"
+                    }
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.EquityFetchError"
+                    }
+                }
+            }
+        },
+        "response.EquitySnapshot": {
+            "type": "object",
+            "properties": {
+                "account_equity": {
+                    "type": "string"
+                },
+                "available_balance": {
+                    "type": "string"
+                },
+                "cached": {
+                    "type": "boolean"
+                },
+                "coins": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.EquityCoin"
+                    }
+                },
+                "exchange": {
+                    "type": "string"
+                },
+                "initial_margin": {
+                    "type": "string"
+                },
+                "maintenance_margin": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "unrealized_pnl": {
+                    "type": "string"
+                },
+                "wallet_balance": {
+                    "type": "string"
                 }
             }
         },
@@ -1268,6 +2001,278 @@ const docTemplate = `{
                 },
                 "time": {
                     "type": "string"
+                }
+            }
+        },
+        "response.PnLEvent": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "base": {
+                    "type": "string"
+                },
+                "component": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "event_time": {
+                    "type": "string"
+                },
+                "exchange": {
+                    "type": "string"
+                },
+                "pair": {
+                    "type": "string"
+                },
+                "quote": {
+                    "type": "string"
+                },
+                "source_id": {
+                    "type": "string"
+                },
+                "source_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.PnLEventList": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.PnLEvent"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.PnLGroup": {
+            "type": "object",
+            "properties": {
+                "base": {
+                    "type": "string"
+                },
+                "component": {
+                    "type": "string"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "exchange": {
+                    "type": "string"
+                },
+                "first_event_time": {
+                    "type": "string"
+                },
+                "funding_amount": {
+                    "type": "string"
+                },
+                "last_event_time": {
+                    "type": "string"
+                },
+                "pair": {
+                    "type": "string"
+                },
+                "quote": {
+                    "type": "string"
+                },
+                "total_amount": {
+                    "type": "string"
+                },
+                "trading_fee_amount": {
+                    "type": "string"
+                },
+                "trading_pnl_amount": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.PnLGroupList": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.PnLGroup"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.PnLSummary": {
+            "type": "object",
+            "properties": {
+                "by_component": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.PnLGroup"
+                    }
+                },
+                "by_exchange": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.PnLGroup"
+                    }
+                },
+                "by_pair": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.PnLGroup"
+                    }
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "funding_amount": {
+                    "type": "string"
+                },
+                "total_amount": {
+                    "type": "string"
+                },
+                "trading_fee_amount": {
+                    "type": "string"
+                },
+                "trading_pnl_amount": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.SystemAllocationStatus": {
+            "type": "object",
+            "properties": {
+                "last_updated_at": {
+                    "type": "string"
+                },
+                "running": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.SystemExchange": {
+            "type": "object",
+            "properties": {
+                "credential_configured": {
+                    "type": "boolean"
+                },
+                "demo": {
+                    "type": "boolean"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "exchange": {
+                    "type": "string"
+                },
+                "last_account_event_at": {
+                    "type": "string"
+                },
+                "last_funding_at": {
+                    "type": "string"
+                },
+                "last_market_data_at": {
+                    "type": "string"
+                },
+                "last_market_quality_at": {
+                    "type": "string"
+                },
+                "last_open_interest_at": {
+                    "type": "string"
+                },
+                "last_wallet_snapshot_at": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "supported": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "response.SystemExchangeList": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.SystemExchange"
+                    }
+                }
+            }
+        },
+        "response.SystemMarketDataStatus": {
+            "type": "object",
+            "properties": {
+                "funding_last_at": {
+                    "type": "string"
+                },
+                "market_quality_last_at": {
+                    "type": "string"
+                },
+                "open_interest_last_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.SystemStatus": {
+            "type": "object",
+            "properties": {
+                "allocations": {
+                    "$ref": "#/definitions/response.SystemAllocationStatus"
+                },
+                "api_version": {
+                    "type": "string"
+                },
+                "database": {
+                    "$ref": "#/definitions/response.HealthComponent"
+                },
+                "exchanges": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.SystemExchange"
+                    }
+                },
+                "market_data": {
+                    "$ref": "#/definitions/response.SystemMarketDataStatus"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "timescale": {
+                    "$ref": "#/definitions/response.HealthComponent"
                 }
             }
         }

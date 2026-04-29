@@ -115,6 +115,91 @@ definitions:
       limit:
         type: integer
     type: object
+  response.CombinedEquity:
+    properties:
+      account_equity:
+        type: string
+      available_balance:
+        type: string
+      initial_margin:
+        type: string
+      maintenance_margin:
+        type: string
+      time:
+        type: string
+      unrealized_pnl:
+        type: string
+      wallet_balance:
+        type: string
+    type: object
+  response.EquityCoin:
+    properties:
+      available_balance:
+        type: string
+      coin:
+        type: string
+      equity:
+        type: string
+      locked:
+        type: string
+      unrealized_pnl:
+        type: string
+      usd_value:
+        type: string
+      wallet_balance:
+        type: string
+    type: object
+  response.EquityFetchError:
+    properties:
+      error:
+        type: string
+      exchange:
+        type: string
+    type: object
+  response.EquityLatest:
+    properties:
+      cache_ttl_seconds:
+        type: integer
+      combined:
+        $ref: '#/definitions/response.CombinedEquity'
+      count:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.EquitySnapshot'
+        type: array
+      errors:
+        items:
+          $ref: '#/definitions/response.EquityFetchError'
+        type: array
+    type: object
+  response.EquitySnapshot:
+    properties:
+      account_equity:
+        type: string
+      available_balance:
+        type: string
+      cached:
+        type: boolean
+      coins:
+        items:
+          $ref: '#/definitions/response.EquityCoin'
+        type: array
+      exchange:
+        type: string
+      initial_margin:
+        type: string
+      maintenance_margin:
+        type: string
+      source:
+        type: string
+      time:
+        type: string
+      unrealized_pnl:
+        type: string
+      wallet_balance:
+        type: string
+    type: object
   response.Error:
     properties:
       error:
@@ -279,6 +364,184 @@ definitions:
         type: string
       time:
         type: string
+    type: object
+  response.PnLEvent:
+    properties:
+      amount:
+        type: string
+      base:
+        type: string
+      component:
+        type: string
+      created_at:
+        type: string
+      currency:
+        type: string
+      event_time:
+        type: string
+      exchange:
+        type: string
+      pair:
+        type: string
+      quote:
+        type: string
+      source_id:
+        type: string
+      source_type:
+        type: string
+    type: object
+  response.PnLEventList:
+    properties:
+      count:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.PnLEvent'
+        type: array
+      limit:
+        type: integer
+    type: object
+  response.PnLGroup:
+    properties:
+      base:
+        type: string
+      component:
+        type: string
+      count:
+        type: integer
+      exchange:
+        type: string
+      first_event_time:
+        type: string
+      funding_amount:
+        type: string
+      last_event_time:
+        type: string
+      pair:
+        type: string
+      quote:
+        type: string
+      total_amount:
+        type: string
+      trading_fee_amount:
+        type: string
+      trading_pnl_amount:
+        type: string
+    type: object
+  response.PnLGroupList:
+    properties:
+      count:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.PnLGroup'
+        type: array
+      limit:
+        type: integer
+    type: object
+  response.PnLSummary:
+    properties:
+      by_component:
+        items:
+          $ref: '#/definitions/response.PnLGroup'
+        type: array
+      by_exchange:
+        items:
+          $ref: '#/definitions/response.PnLGroup'
+        type: array
+      by_pair:
+        items:
+          $ref: '#/definitions/response.PnLGroup'
+        type: array
+      count:
+        type: integer
+      funding_amount:
+        type: string
+      total_amount:
+        type: string
+      trading_fee_amount:
+        type: string
+      trading_pnl_amount:
+        type: string
+    type: object
+  response.SystemAllocationStatus:
+    properties:
+      last_updated_at:
+        type: string
+      running:
+        type: integer
+      total:
+        type: integer
+    type: object
+  response.SystemExchange:
+    properties:
+      credential_configured:
+        type: boolean
+      demo:
+        type: boolean
+      enabled:
+        type: boolean
+      exchange:
+        type: string
+      last_account_event_at:
+        type: string
+      last_funding_at:
+        type: string
+      last_market_data_at:
+        type: string
+      last_market_quality_at:
+        type: string
+      last_open_interest_at:
+        type: string
+      last_wallet_snapshot_at:
+        type: string
+      notes:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+      supported:
+        type: boolean
+    type: object
+  response.SystemExchangeList:
+    properties:
+      count:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.SystemExchange'
+        type: array
+    type: object
+  response.SystemMarketDataStatus:
+    properties:
+      funding_last_at:
+        type: string
+      market_quality_last_at:
+        type: string
+      open_interest_last_at:
+        type: string
+    type: object
+  response.SystemStatus:
+    properties:
+      allocations:
+        $ref: '#/definitions/response.SystemAllocationStatus'
+      api_version:
+        type: string
+      database:
+        $ref: '#/definitions/response.HealthComponent'
+      exchanges:
+        items:
+          $ref: '#/definitions/response.SystemExchange'
+        type: array
+      market_data:
+        $ref: '#/definitions/response.SystemMarketDataStatus'
+      status:
+        type: string
+      time:
+        type: string
+      timescale:
+        $ref: '#/definitions/response.HealthComponent'
     type: object
 info:
   contact: {}
@@ -515,6 +778,80 @@ paths:
       summary: Allocation summary
       tags:
       - Allocations
+  /equity/latest:
+    get:
+      description: Temporarily fetch latest wallet/equity directly from exchange APIs
+        with a short backend cache
+      parameters:
+      - description: 'Filter by exchange: bybit, bitget. Supports comma-separated
+          values.'
+        in: query
+        name: exchange
+        type: string
+      - default: USDT
+        description: Margin quote coins. Supports comma-separated values.
+        in: query
+        name: quote
+        type: string
+      - description: Bypass backend cache and pull from exchange API
+        in: query
+        name: refresh
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.EquityLatest'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/response.EquityLatest'
+      summary: Latest equity from exchange API
+      tags:
+      - Equity
+  /equity/live:
+    get:
+      description: Temporarily fetch latest wallet/equity directly from exchange APIs
+        with a short backend cache
+      parameters:
+      - description: 'Filter by exchange: bybit, bitget. Supports comma-separated
+          values.'
+        in: query
+        name: exchange
+        type: string
+      - default: USDT
+        description: Margin quote coins. Supports comma-separated values.
+        in: query
+        name: quote
+        type: string
+      - description: Bypass backend cache and pull from exchange API
+        in: query
+        name: refresh
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.EquityLatest'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/response.EquityLatest'
+      summary: Latest equity from exchange API
+      tags:
+      - Equity
   /funding/history:
     get:
       description: List historical funding rates
@@ -836,4 +1173,339 @@ paths:
       summary: Latest market quality metrics
       tags:
       - Market Quality
+  /pnl/by-component:
+    get:
+      description: Summarize PnL grouped by funding, trading_fee, and trading_pnl
+      parameters:
+      - description: Filter by exchange. Supports comma-separated values.
+        in: query
+        name: exchange
+        type: string
+      - description: Filter by base asset. Supports comma-separated values.
+        in: query
+        name: base
+        type: string
+      - description: Filter by quote asset. Supports comma-separated values.
+        in: query
+        name: quote
+        type: string
+      - description: 'Filter by component: funding, trading_fee, trading_pnl. Supports
+          comma-separated values.'
+        in: query
+        name: component
+        type: string
+      - description: Filter by source type. Supports comma-separated values.
+        in: query
+        name: source_type
+        type: string
+      - description: Filter by source id. Supports comma-separated values.
+        in: query
+        name: source_id
+        type: string
+      - description: Inclusive start time. Supports RFC3339 or YYYY-MM-DD.
+        in: query
+        name: from
+        type: string
+      - description: Exclusive end time. Supports RFC3339 or YYYY-MM-DD.
+        in: query
+        name: to
+        type: string
+      - default: 100
+        description: Maximum rows to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.PnLGroupList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: PnL by component
+      tags:
+      - PnL
+  /pnl/by-exchange:
+    get:
+      description: Summarize PnL grouped by exchange
+      parameters:
+      - description: Filter by exchange. Supports comma-separated values.
+        in: query
+        name: exchange
+        type: string
+      - description: Filter by base asset. Supports comma-separated values.
+        in: query
+        name: base
+        type: string
+      - description: Filter by quote asset. Supports comma-separated values.
+        in: query
+        name: quote
+        type: string
+      - description: 'Filter by component: funding, trading_fee, trading_pnl. Supports
+          comma-separated values.'
+        in: query
+        name: component
+        type: string
+      - description: Filter by source type. Supports comma-separated values.
+        in: query
+        name: source_type
+        type: string
+      - description: Filter by source id. Supports comma-separated values.
+        in: query
+        name: source_id
+        type: string
+      - description: Inclusive start time. Supports RFC3339 or YYYY-MM-DD.
+        in: query
+        name: from
+        type: string
+      - description: Exclusive end time. Supports RFC3339 or YYYY-MM-DD.
+        in: query
+        name: to
+        type: string
+      - default: 100
+        description: Maximum rows to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.PnLGroupList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: PnL by exchange
+      tags:
+      - PnL
+  /pnl/by-pair:
+    get:
+      description: Summarize PnL grouped by base and quote
+      parameters:
+      - description: Filter by exchange. Supports comma-separated values.
+        in: query
+        name: exchange
+        type: string
+      - description: Filter by base asset. Supports comma-separated values.
+        in: query
+        name: base
+        type: string
+      - description: Filter by quote asset. Supports comma-separated values.
+        in: query
+        name: quote
+        type: string
+      - description: 'Filter by component: funding, trading_fee, trading_pnl. Supports
+          comma-separated values.'
+        in: query
+        name: component
+        type: string
+      - description: Filter by source type. Supports comma-separated values.
+        in: query
+        name: source_type
+        type: string
+      - description: Filter by source id. Supports comma-separated values.
+        in: query
+        name: source_id
+        type: string
+      - description: Inclusive start time. Supports RFC3339 or YYYY-MM-DD.
+        in: query
+        name: from
+        type: string
+      - description: Exclusive end time. Supports RFC3339 or YYYY-MM-DD.
+        in: query
+        name: to
+        type: string
+      - default: 100
+        description: Maximum rows to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.PnLGroupList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: PnL by pair
+      tags:
+      - PnL
+  /pnl/events:
+    get:
+      description: List persisted PnL ledger events
+      parameters:
+      - description: Filter by exchange. Supports comma-separated values.
+        in: query
+        name: exchange
+        type: string
+      - description: Filter by base asset. Supports comma-separated values.
+        in: query
+        name: base
+        type: string
+      - description: Filter by quote asset. Supports comma-separated values.
+        in: query
+        name: quote
+        type: string
+      - description: 'Filter by component: funding, trading_fee, trading_pnl. Supports
+          comma-separated values.'
+        in: query
+        name: component
+        type: string
+      - description: Filter by source type. Supports comma-separated values.
+        in: query
+        name: source_type
+        type: string
+      - description: Filter by source id. Supports comma-separated values.
+        in: query
+        name: source_id
+        type: string
+      - description: Inclusive start time. Supports RFC3339 or YYYY-MM-DD.
+        in: query
+        name: from
+        type: string
+      - description: Exclusive end time. Supports RFC3339 or YYYY-MM-DD.
+        in: query
+        name: to
+        type: string
+      - default: 100
+        description: Maximum rows to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.PnLEventList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: PnL events
+      tags:
+      - PnL
+  /pnl/summary:
+    get:
+      description: Summarize PnL totals and grouped breakdowns
+      parameters:
+      - description: Filter by exchange. Supports comma-separated values.
+        in: query
+        name: exchange
+        type: string
+      - description: Filter by base asset. Supports comma-separated values.
+        in: query
+        name: base
+        type: string
+      - description: Filter by quote asset. Supports comma-separated values.
+        in: query
+        name: quote
+        type: string
+      - description: 'Filter by component: funding, trading_fee, trading_pnl. Supports
+          comma-separated values.'
+        in: query
+        name: component
+        type: string
+      - description: Filter by source type. Supports comma-separated values.
+        in: query
+        name: source_type
+        type: string
+      - description: Filter by source id. Supports comma-separated values.
+        in: query
+        name: source_id
+        type: string
+      - description: Inclusive start time. Supports RFC3339 or YYYY-MM-DD.
+        in: query
+        name: from
+        type: string
+      - description: Exclusive end time. Supports RFC3339 or YYYY-MM-DD.
+        in: query
+        name: to
+        type: string
+      - default: 100
+        description: Maximum grouped rows per breakdown
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.PnLSummary'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: PnL summary
+      tags:
+      - PnL
+  /system/exchanges:
+    get:
+      description: List supported exchanges and latest market-data timestamps
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SystemExchangeList'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: System exchanges
+      tags:
+      - System
+  /system/status:
+    get:
+      description: Get API, database, TimescaleDB, market-data, allocation, and exchange
+        status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SystemStatus'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/response.SystemStatus'
+      summary: System status
+      tags:
+      - System
 swagger: "2.0"
