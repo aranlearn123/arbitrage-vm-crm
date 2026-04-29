@@ -120,6 +120,75 @@ definitions:
       error:
         type: string
     type: object
+  response.FundingRate:
+    properties:
+      base:
+        type: string
+      exchange:
+        type: string
+      funding_rate:
+        type: string
+      pair:
+        type: string
+      quote:
+        type: string
+      time:
+        type: string
+    type: object
+  response.FundingRateList:
+    properties:
+      count:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.FundingRate'
+        type: array
+      limit:
+        type: integer
+    type: object
+  response.FundingSpread:
+    properties:
+      abs_spread_bps:
+        type: string
+      base:
+        type: string
+      bitget_rate:
+        type: string
+      bitget_time:
+        type: string
+      bybit_rate:
+        type: string
+      bybit_time:
+        type: string
+      direction_hint:
+        type: string
+      pair:
+        type: string
+      quote:
+        type: string
+      spread:
+        type: string
+      spread_bps:
+        type: string
+      time:
+        type: string
+    type: object
+  response.FundingSpreadDetail:
+    properties:
+      data:
+        $ref: '#/definitions/response.FundingSpread'
+    type: object
+  response.FundingSpreadList:
+    properties:
+      count:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.FundingSpread'
+        type: array
+      limit:
+        type: integer
+    type: object
   response.Health:
     properties:
       checks:
@@ -141,6 +210,74 @@ definitions:
       error:
         type: string
       status:
+        type: string
+    type: object
+  response.MarketQualityAlert:
+    properties:
+      base:
+        type: string
+      depth_stability_ratio:
+        type: string
+      exchange:
+        type: string
+      mid_speed_bps_per_sec_p95:
+        type: string
+      pair:
+        type: string
+      quote:
+        type: string
+      reasons:
+        items:
+          type: string
+        type: array
+      samples:
+        type: integer
+      spread_bps_p50:
+        type: string
+      time:
+        type: string
+    type: object
+  response.MarketQualityAlertList:
+    properties:
+      count:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.MarketQualityAlert'
+        type: array
+      limit:
+        type: integer
+    type: object
+  response.MarketQualityList:
+    properties:
+      count:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/response.MarketQualityMetric'
+        type: array
+      limit:
+        type: integer
+    type: object
+  response.MarketQualityMetric:
+    properties:
+      base:
+        type: string
+      depth_stability_ratio:
+        type: string
+      exchange:
+        type: string
+      mid_speed_bps_per_sec_p95:
+        type: string
+      pair:
+        type: string
+      quote:
+        type: string
+      samples:
+        type: integer
+      spread_bps_p50:
+        type: string
+      time:
         type: string
     type: object
 info:
@@ -378,6 +515,169 @@ paths:
       summary: Allocation summary
       tags:
       - Allocations
+  /funding/history:
+    get:
+      description: List historical funding rates
+      parameters:
+      - description: Filter by exchange. Supports comma-separated values.
+        in: query
+        name: exchange
+        type: string
+      - description: Filter by base asset. Supports comma-separated values.
+        in: query
+        name: base
+        type: string
+      - description: Filter by quote asset. Supports comma-separated values.
+        in: query
+        name: quote
+        type: string
+      - description: Inclusive start time. Supports RFC3339 or YYYY-MM-DD.
+        in: query
+        name: from
+        type: string
+      - description: Exclusive end time. Supports RFC3339 or YYYY-MM-DD.
+        in: query
+        name: to
+        type: string
+      - default: 100
+        description: Maximum rows to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.FundingRateList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Funding history
+      tags:
+      - Funding
+  /funding/latest:
+    get:
+      description: List latest funding rate per exchange and pair
+      parameters:
+      - description: Filter by exchange. Supports comma-separated values.
+        in: query
+        name: exchange
+        type: string
+      - description: Filter by base asset. Supports comma-separated values.
+        in: query
+        name: base
+        type: string
+      - description: Filter by quote asset. Supports comma-separated values.
+        in: query
+        name: quote
+        type: string
+      - default: 100
+        description: Maximum rows to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.FundingRateList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Latest funding rates
+      tags:
+      - Funding
+  /funding/spread:
+    get:
+      description: Get latest Bybit versus Bitget funding spread for one pair
+      parameters:
+      - description: Base asset
+        in: query
+        name: base
+        required: true
+        type: string
+      - default: USDT
+        description: Quote asset
+        in: query
+        name: quote
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.FundingSpreadDetail'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Funding spread
+      tags:
+      - Funding
+  /funding/top-spreads:
+    get:
+      description: List pairs with the largest absolute Bybit versus Bitget funding
+        spread
+      parameters:
+      - description: Filter by base asset. Supports comma-separated values.
+        in: query
+        name: base
+        type: string
+      - description: Filter by quote asset. Supports comma-separated values.
+        in: query
+        name: quote
+        type: string
+      - default: 0
+        description: Minimum absolute spread in bps
+        in: query
+        name: min_abs_spread_bps
+        type: number
+      - default: 100
+        description: Maximum rows to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.FundingSpreadList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Top funding spreads
+      tags:
+      - Funding
   /health:
     get:
       description: Check API service and database status
@@ -395,4 +695,145 @@ paths:
       summary: Health check
       tags:
       - System
+  /market-quality/alerts:
+    get:
+      description: List latest market quality rows that violate simple CRM thresholds
+      parameters:
+      - description: Filter by exchange. Supports comma-separated values.
+        in: query
+        name: exchange
+        type: string
+      - description: Filter by base asset. Supports comma-separated values.
+        in: query
+        name: base
+        type: string
+      - description: Filter by quote asset. Supports comma-separated values.
+        in: query
+        name: quote
+        type: string
+      - default: 10
+        description: Alert when samples are below this value
+        in: query
+        name: min_samples
+        type: integer
+      - default: 10
+        description: Alert when spread_bps_p50 is above this value
+        in: query
+        name: max_spread_bps_p50
+        type: number
+      - default: 50
+        description: Alert when mid speed p95 is above this value
+        in: query
+        name: max_mid_speed_bps_per_sec_p95
+        type: number
+      - default: 0.1
+        description: Alert when depth stability ratio is below this value
+        in: query
+        name: min_depth_stability_ratio
+        type: number
+      - default: 100
+        description: Maximum rows to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MarketQualityAlertList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Market quality alerts
+      tags:
+      - Market Quality
+  /market-quality/history:
+    get:
+      description: List historical market quality metrics
+      parameters:
+      - description: Filter by exchange. Supports comma-separated values.
+        in: query
+        name: exchange
+        type: string
+      - description: Filter by base asset. Supports comma-separated values.
+        in: query
+        name: base
+        type: string
+      - description: Filter by quote asset. Supports comma-separated values.
+        in: query
+        name: quote
+        type: string
+      - description: Inclusive start time. Supports RFC3339 or YYYY-MM-DD.
+        in: query
+        name: from
+        type: string
+      - description: Exclusive end time. Supports RFC3339 or YYYY-MM-DD.
+        in: query
+        name: to
+        type: string
+      - default: 100
+        description: Maximum rows to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MarketQualityList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Market quality history
+      tags:
+      - Market Quality
+  /market-quality/latest:
+    get:
+      description: List latest market quality metrics per exchange and pair
+      parameters:
+      - description: Filter by exchange. Supports comma-separated values.
+        in: query
+        name: exchange
+        type: string
+      - description: Filter by base asset. Supports comma-separated values.
+        in: query
+        name: base
+        type: string
+      - description: Filter by quote asset. Supports comma-separated values.
+        in: query
+        name: quote
+        type: string
+      - default: 100
+        description: Maximum rows to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MarketQualityList'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Latest market quality metrics
+      tags:
+      - Market Quality
 swagger: "2.0"

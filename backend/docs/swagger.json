@@ -351,6 +351,250 @@
                 }
             }
         },
+        "/funding/history": {
+            "get": {
+                "description": "List historical funding rates",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Funding"
+                ],
+                "summary": "Funding history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by exchange. Supports comma-separated values.",
+                        "name": "exchange",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by base asset. Supports comma-separated values.",
+                        "name": "base",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by quote asset. Supports comma-separated values.",
+                        "name": "quote",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Inclusive start time. Supports RFC3339 or YYYY-MM-DD.",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Exclusive end time. Supports RFC3339 or YYYY-MM-DD.",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum rows to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.FundingRateList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/funding/latest": {
+            "get": {
+                "description": "List latest funding rate per exchange and pair",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Funding"
+                ],
+                "summary": "Latest funding rates",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by exchange. Supports comma-separated values.",
+                        "name": "exchange",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by base asset. Supports comma-separated values.",
+                        "name": "base",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by quote asset. Supports comma-separated values.",
+                        "name": "quote",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum rows to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.FundingRateList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/funding/spread": {
+            "get": {
+                "description": "Get latest Bybit versus Bitget funding spread for one pair",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Funding"
+                ],
+                "summary": "Funding spread",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Base asset",
+                        "name": "base",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "USDT",
+                        "description": "Quote asset",
+                        "name": "quote",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.FundingSpreadDetail"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/funding/top-spreads": {
+            "get": {
+                "description": "List pairs with the largest absolute Bybit versus Bitget funding spread",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Funding"
+                ],
+                "summary": "Top funding spreads",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by base asset. Supports comma-separated values.",
+                        "name": "base",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by quote asset. Supports comma-separated values.",
+                        "name": "quote",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "default": 0,
+                        "description": "Minimum absolute spread in bps",
+                        "name": "min_abs_spread_bps",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum rows to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.FundingSpreadList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "Check API service and database status",
@@ -372,6 +616,217 @@
                         "description": "Service Unavailable",
                         "schema": {
                             "$ref": "#/definitions/response.Health"
+                        }
+                    }
+                }
+            }
+        },
+        "/market-quality/alerts": {
+            "get": {
+                "description": "List latest market quality rows that violate simple CRM thresholds",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Market Quality"
+                ],
+                "summary": "Market quality alerts",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by exchange. Supports comma-separated values.",
+                        "name": "exchange",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by base asset. Supports comma-separated values.",
+                        "name": "base",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by quote asset. Supports comma-separated values.",
+                        "name": "quote",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Alert when samples are below this value",
+                        "name": "min_samples",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "default": 10,
+                        "description": "Alert when spread_bps_p50 is above this value",
+                        "name": "max_spread_bps_p50",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "default": 50,
+                        "description": "Alert when mid speed p95 is above this value",
+                        "name": "max_mid_speed_bps_per_sec_p95",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "default": 0.1,
+                        "description": "Alert when depth stability ratio is below this value",
+                        "name": "min_depth_stability_ratio",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum rows to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MarketQualityAlertList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/market-quality/history": {
+            "get": {
+                "description": "List historical market quality metrics",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Market Quality"
+                ],
+                "summary": "Market quality history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by exchange. Supports comma-separated values.",
+                        "name": "exchange",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by base asset. Supports comma-separated values.",
+                        "name": "base",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by quote asset. Supports comma-separated values.",
+                        "name": "quote",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Inclusive start time. Supports RFC3339 or YYYY-MM-DD.",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Exclusive end time. Supports RFC3339 or YYYY-MM-DD.",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum rows to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MarketQualityList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/market-quality/latest": {
+            "get": {
+                "description": "List latest market quality metrics per exchange and pair",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Market Quality"
+                ],
+                "summary": "Latest market quality metrics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by exchange. Supports comma-separated values.",
+                        "name": "exchange",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by base asset. Supports comma-separated values.",
+                        "name": "base",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by quote asset. Supports comma-separated values.",
+                        "name": "quote",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum rows to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MarketQualityList"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
                         }
                     }
                 }
@@ -563,6 +1018,112 @@
                 }
             }
         },
+        "response.FundingRate": {
+            "type": "object",
+            "properties": {
+                "base": {
+                    "type": "string"
+                },
+                "exchange": {
+                    "type": "string"
+                },
+                "funding_rate": {
+                    "type": "string"
+                },
+                "pair": {
+                    "type": "string"
+                },
+                "quote": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.FundingRateList": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.FundingRate"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.FundingSpread": {
+            "type": "object",
+            "properties": {
+                "abs_spread_bps": {
+                    "type": "string"
+                },
+                "base": {
+                    "type": "string"
+                },
+                "bitget_rate": {
+                    "type": "string"
+                },
+                "bitget_time": {
+                    "type": "string"
+                },
+                "bybit_rate": {
+                    "type": "string"
+                },
+                "bybit_time": {
+                    "type": "string"
+                },
+                "direction_hint": {
+                    "type": "string"
+                },
+                "pair": {
+                    "type": "string"
+                },
+                "quote": {
+                    "type": "string"
+                },
+                "spread": {
+                    "type": "string"
+                },
+                "spread_bps": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.FundingSpreadDetail": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.FundingSpread"
+                }
+            }
+        },
+        "response.FundingSpreadList": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.FundingSpread"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                }
+            }
+        },
         "response.Health": {
             "type": "object",
             "properties": {
@@ -595,6 +1156,110 @@
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.MarketQualityAlert": {
+            "type": "object",
+            "properties": {
+                "base": {
+                    "type": "string"
+                },
+                "depth_stability_ratio": {
+                    "type": "string"
+                },
+                "exchange": {
+                    "type": "string"
+                },
+                "mid_speed_bps_per_sec_p95": {
+                    "type": "string"
+                },
+                "pair": {
+                    "type": "string"
+                },
+                "quote": {
+                    "type": "string"
+                },
+                "reasons": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "samples": {
+                    "type": "integer"
+                },
+                "spread_bps_p50": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.MarketQualityAlertList": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.MarketQualityAlert"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.MarketQualityList": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.MarketQualityMetric"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.MarketQualityMetric": {
+            "type": "object",
+            "properties": {
+                "base": {
+                    "type": "string"
+                },
+                "depth_stability_ratio": {
+                    "type": "string"
+                },
+                "exchange": {
+                    "type": "string"
+                },
+                "mid_speed_bps_per_sec_p95": {
+                    "type": "string"
+                },
+                "pair": {
+                    "type": "string"
+                },
+                "quote": {
+                    "type": "string"
+                },
+                "samples": {
+                    "type": "integer"
+                },
+                "spread_bps_p50": {
+                    "type": "string"
+                },
+                "time": {
                     "type": "string"
                 }
             }
