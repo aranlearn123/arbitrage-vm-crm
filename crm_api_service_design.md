@@ -16,7 +16,7 @@
 
 ### Foundation
 
-- [x] Go Fiber API scaffold
+- [x] Go chi API scaffold
 - [x] `.env` config loader
 - [x] PostgreSQL/Bun connection
 - [x] Swagger docs route
@@ -134,7 +134,7 @@ Current backend route source:
 
 ### Backend Foundation
 
-- [x] วางโครงสร้าง Go Fiber backend ใน `backend/`
+- [x] วางโครงสร้าง Go chi backend ใน `backend/`
 - [x] โหลด config จาก `.env`
 - [x] เชื่อม PostgreSQL ด้วย Bun และ `pgdriver`
 - [x] เพิ่ม route Swagger ที่ `GET /swagger/*`
